@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "6ce8ce3711857789538cf4acdeed460fe5635f8b8e2d26e6092a9ef9ccd00a4a",
+  "moduleFileHash": "d8782b14f9d72fd963affd6f1e21e77aedb8e2b2c6d9f363271e3cadee61ff95",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -17,10 +17,10 @@
   },
   "moduleDepGraph": {
     "<root>": {
-      "name": "net-cpp-coro",
+      "name": "cpp-example-repo",
       "version": "0.1",
       "key": "<root>",
-      "repoName": "net-cpp-coro",
+      "repoName": "cpp-example-repo",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [
         "@llvm_toolchain//:all"

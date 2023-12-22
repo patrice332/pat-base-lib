@@ -1,7 +1,7 @@
 """Project Module.bazel"""
 
 module(
-    name = "net-cpp-coro",
+    name = "cpp-example-repo",
     version = "0.1",
 )
 
