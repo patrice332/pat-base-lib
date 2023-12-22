@@ -1,4 +1,25 @@
-'''Project Module.bazel'''
+"""Project Module.bazel"""
 
-module(name = "net-cpp-coro", version = "0.1")
+module(
+    name = "net-cpp-coro",
+    version = "0.1",
+)
 
+bazel_dep(name = "toolchains_llvm", version = "0.10.3")
+
+# Configure and register the toolchain.
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(
+    cxx_standard = {"linux-x86_64": "c++20"},
+    llvm_version = "17.0.6",
+    sha256 = {"linux-x86_64": "884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3"},
+    strip_prefix = {
+        "linux-x86_64": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04",
+    },
+    urls = {
+        "linux-x86_64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz"],
+    },
+)
+use_repo(llvm, "llvm_toolchain")
+
+register_toolchains("@llvm_toolchain//:all")
