@@ -1,0 +1,13 @@
+diff --git a/boost.BUILD b/boost.BUILD
+index 13d9d28..9fdc498 100644
+--- a/boost.BUILD
++++ b/boost.BUILD
+@@ -448,7 +448,7 @@ cc_library(
+     visibility = ["//visibility:public"],
+     deps = [
+         ":asio",
+-        "@openssl//:ssl",
++        "@boringssl//:ssl",
+     ],
+ )
+ 
