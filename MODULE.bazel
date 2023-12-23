@@ -27,6 +27,7 @@ register_toolchains("@llvm_toolchain//:all")
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
 bazel_dep(name = "platforms", version = "0.0.8")
 bazel_dep(name = "boringssl", version = "0.0.0-20230215-5c22014")
+bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -51,4 +52,12 @@ http_archive(
     sha256 = "0c6049764e80aa32754acd7d4f179fd5551d8172a83b71532ae093e7384e98da",
     strip_prefix = "boost-1.83.0",
     url = "https://github.com/boostorg/boost/releases/download/boost-1.83.0/boost-1.83.0.tar.gz",
+)
+
+http_archive(
+    name = "com_github_libuv",
+    build_file = "//third_party/libuv:libuv.BUILD",
+    sha256 = "458e34d5ef7f3c0394a2bfd8c39d757cb1553baa5959b9b4b45df63aa027a228",
+    strip_prefix = "libuv-1.45.0",
+    urls = ["https://github.com/libuv/libuv/archive/refs/tags/v1.45.0.tar.gz"],
 )
