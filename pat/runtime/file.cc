@@ -1,4 +1,4 @@
-#include "pat/runtime/libuv_file.h"
+#include "pat/runtime/file.h"
 
 #include <unistd.h>
 
@@ -12,6 +12,12 @@ File::~File() {
         close(fd_);
         fd_ = -1;
     }
+}
+
+File NewFile(int file_descriptor, std::string /* name */) {
+    File file;
+    file.fd_ = file_descriptor;
+    return file;
 }
 
 }  // namespace pat::runtime

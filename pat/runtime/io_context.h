@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <thread>
 
 struct uv_loop_s;
 
@@ -19,8 +20,11 @@ class IOContext {
     constexpr uv_loop_s const* GetLoop() const { return loop_.get(); }
 
    private:
+    void run();
     IOContext();
     std::unique_ptr<uv_loop_s> loop_{};
+    bool stop_{false};
+    std::thread thread_{};
 };
 
 }  // namespace pat::runtime

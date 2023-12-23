@@ -5,4 +5,7 @@ cc_binary(
     srcs = [
         "test.cc",
     ],
+    deps = [
+        "//pat/runtime",
+    ],
 )
