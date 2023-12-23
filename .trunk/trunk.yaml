@@ -16,22 +16,41 @@ runtimes:
     - python@3.10.8
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+  definitions:
+    - name: clang-tidy
+      commands:
+        - name: lint
+          run_when: [cli, monitor, ci]
   enabled:
     - clang-tidy@16.0.3
     - clang-format@16.0.3
     - buildifier@6.4.0
-    - checkov@3.1.40
+    - checkov@3.1.42
     - git-diff-check
     - prettier@3.1.1
     - trivy@0.48.1
     - trufflehog@3.63.5
     - yamllint@1.33.0
+  bazel:
+    compiler_override_paths:
+      - os: linux
+        cpu: x86_64
+        path: external/toolchains_llvm~0.10.3~llvm~llvm_toolchain_llvm/bin/clang
 actions:
   enabled:
+    - bazel-compile-commands
     - trunk-announce
     - trunk-check-pre-push
     - trunk-fmt-pre-commit
     - trunk-upgrade-available
+  definitions:
+    - id: bazel-compile-commands
+      display_name: Generate compile command
+      description: Run 'trunk generate-compile-commands' anytime a buildfile changes
+      run: trunk generate-compile-commands
+      triggers:
+        - files: ["**/BUILD", "**/BUILD.bazel", "**/*.bzl", WORKSPACE]
+
 tools:
   enabled:
     - bazel@7.0.0

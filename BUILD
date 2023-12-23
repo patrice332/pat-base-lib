@@ -5,7 +5,4 @@ cc_binary(
     srcs = [
         "test.cc",
     ],
-    deps = [
-        "@boost//:asio_ssl",
-    ],
 )
