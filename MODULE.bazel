@@ -28,6 +28,7 @@ bazel_dep(name = "bazel_skylib", version = "1.5.0")
 bazel_dep(name = "platforms", version = "0.0.8")
 bazel_dep(name = "boringssl", version = "0.0.0-20230215-5c22014")
 bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
+bazel_dep(name = "rules_cc", version = "0.0.9")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -60,4 +61,12 @@ http_archive(
     sha256 = "458e34d5ef7f3c0394a2bfd8c39d757cb1553baa5959b9b4b45df63aa027a228",
     strip_prefix = "libuv-1.45.0",
     urls = ["https://github.com/libuv/libuv/archive/refs/tags/v1.45.0.tar.gz"],
+)
+
+http_archive(
+    name = "com_facebook_libunifex",
+    build_file = "//third_party/libunifex:libunifex.BUILD",
+    sha256 = "d5ce3b616e166da31e6b4284764a1feeba52aade868bcbffa94cfd86b402716e",
+    strip_prefix = "libunifex-0.4.0",
+    urls = ["https://github.com/facebookexperimental/libunifex/archive/refs/tags/v0.4.0.tar.gz"],
 )

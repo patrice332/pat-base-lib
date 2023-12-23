@@ -1,0 +1,3 @@
+common --sandbox_base=/dev/shm
+common --noincompatible_sandbox_hermetic_tmp
+build --incompatible_strict_action_env
