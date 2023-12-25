@@ -21,7 +21,7 @@ class IOContext {
 
    private:
     void run();
-    IOContext();
+    explicit IOContext(std::unique_ptr<uv_loop_s> loop);
     std::unique_ptr<uv_loop_s> loop_{};
     bool stop_{false};
     std::thread thread_{};

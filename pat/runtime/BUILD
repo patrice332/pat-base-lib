@@ -16,13 +16,21 @@ cc_library(
 cc_library(
     name = "runtime",
     srcs = [
+        "close.cc",
         "file.cc",
         "open.cc",
+        "promise.cc",
+        "read.cc",
+        "write.cc",
     ],
     hdrs = [
+        "close.h",
         "file.h",
         "file_fwd.h",
         "open.h",
+        "promise.h",
+        "read.h",
+        "write.h",
     ],
     visibility = ["//visibility:public"],
     deps = [

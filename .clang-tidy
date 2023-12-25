@@ -21,6 +21,7 @@ Checks: >-
   -modernize-use-trailing-return-type,
   -performance-unnecessary-value-param,
   -readability-magic-numbers,
+  -performance-trivially-destructible,
 
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold

@@ -5,8 +5,19 @@
 namespace pat::runtime {
 
 File::File() = default;
-File::File(File &&other) noexcept = default;
-File &File::operator=(File &&other) noexcept = default;
+File::File(File &&other) noexcept : fd_{other.fd_} { other.fd_ = -1; }
+
+File &File::operator=(File &&other) noexcept {
+    if (this != &other) {
+        if (fd_ != -1) {
+            close(fd_);
+        }
+        fd_ = other.fd_;
+        other.fd_ = -1;
+    }
+    return *this;
+}
+
 File::~File() {
     if (fd_ != -1) {
         close(fd_);

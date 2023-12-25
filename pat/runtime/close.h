@@ -2,19 +2,17 @@
 
 #include <system_error>
 
-#include "pat/runtime/file_fwd.h"
 #include "unifex/blocking.hpp"
 #include "unifex/receiver_concepts.hpp"
 #include "uv.h"
 
-namespace pat::runtime::_open {
+namespace pat::runtime::_close {
 
-template <unifex::receiver_of<File> Receiver>
+template <unifex::receiver_of<> Receiver>
 class _op {
    public:
-    // trunk-ignore(clang-tidy/bugprone-easily-swappable-parameters)
-    _op(Receiver &&rec, uv_loop_t *loop, std::string path, int flags, int mode)
-        : rec_(std::move(rec)), loop_{loop}, path_{std::move(path)}, flags_{flags}, mode_{mode} {}
+    _op(Receiver &&rec, uv_loop_t *loop, int file_descriptor)
+        : rec_(std::move(rec)), loop_{loop}, file_descriptor_{file_descriptor} {}
 
     _op(_op const &) = delete;
     _op &operator=(_op const &) = delete;
@@ -24,7 +22,7 @@ class _op {
 
     void start() noexcept {
         fs_op_.data = this;
-        uv_fs_open(loop_, &fs_op_, path_.c_str(), flags_, mode_, [](uv_fs_t *fs_op) {
+        uv_fs_close(loop_, &fs_op_, file_descriptor_, [](uv_fs_t *fs_op) {
             // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
             auto *operation = reinterpret_cast<_op<Receiver> *>(fs_op->data);
             if (fs_op->result < 0) {
@@ -33,23 +31,20 @@ class _op {
                 return;
             }
 
-            auto file = NewFile(fs_op->result, std::move(operation->path_));
-            std::move(operation->rec_).set_value(std::move(file));
+            std::move(operation->rec_).set_value();
         });
     }
 
    private:
     Receiver rec_;
     uv_loop_t *loop_;
-    std::string path_;
-    int flags_;
-    int mode_;
+    int file_descriptor_;
     uv_fs_t fs_op_{};
 };
 
 class _sender {
    public:
-    _sender(uv_loop_t *loop, std::string path, int flags, int mode);
+    _sender(uv_loop_t *loop, int file_descriptor);
     _sender(_sender const &) = delete;
     _sender &operator=(_sender const &) = delete;
     _sender(_sender &&other) noexcept;
@@ -57,12 +52,12 @@ class _sender {
     _sender &operator=(_sender &&other) noexcept;
     ~_sender();
 
-    auto connect(unifex::receiver_of<File> auto &&rec) {
-        return _op{std::forward<decltype(rec)>(rec), loop_, std::move(path_), flags_, mode_};
+    auto connect(unifex::receiver_of<> auto &&rec) {
+        return _op{std::forward<decltype(rec)>(rec), loop_, file_descriptor_};
     }
 
     template <template <typename...> class Variant, template <typename...> class Tuple>
-    using value_types = Variant<Tuple<File>>;
+    using value_types = Variant<Tuple<>>;
     template <template <typename...> class Variant>
     using error_types = Variant<std::error_code>;
     static constexpr bool sends_done = false;
@@ -71,9 +66,7 @@ class _sender {
 
    private:
     uv_loop_t *loop_;
-    std::string path_;
-    int flags_;
-    int mode_;
+    int file_descriptor_;
 };
 
-}  // namespace pat::runtime::_open
+}  // namespace pat::runtime::_close
