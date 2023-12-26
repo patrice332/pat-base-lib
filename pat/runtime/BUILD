@@ -18,6 +18,7 @@ cc_library(
     srcs = [
         "close.cc",
         "file.cc",
+        "getaddrinfo.cc",
         "open.cc",
         "promise.cc",
         "read.cc",
@@ -27,6 +28,7 @@ cc_library(
         "close.h",
         "file.h",
         "file_fwd.h",
+        "getaddrinfo.h",
         "open.h",
         "promise.h",
         "read.h",
