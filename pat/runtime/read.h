@@ -30,6 +30,8 @@ class _op {
         uv_fs_read(
             loop_, &fs_op_, file_descriptor_, msg_.data(), msg_.size(), -1, [](uv_fs_t *fs_op) {
                 // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
+                uv_fs_req_cleanup(fs_op);
+
                 auto *operation = reinterpret_cast<_op<Receiver> *>(fs_op->data);
                 if (fs_op->result < 0) {
                     std::move(operation->rec_)
