@@ -21,6 +21,7 @@ class TCPSocket final : public Stream<TCPSocket> {
     }
 
    private:
+    friend class Stream<TCPSocket>;
     explicit TCPSocket(IOContext& context);
 
     uv_stream_t& StreamHandle();
