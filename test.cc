@@ -11,6 +11,7 @@
 #include "pat/runtime/io_context.h"
 #include "pat/runtime/promise.h"
 #include "pat/runtime/tcp_socket.h"
+#include "unifex/let_value_with.hpp"
 #include "unifex/sync_wait.hpp"
 
 int main() {
@@ -66,20 +67,23 @@ int main() {
 
         auto socket = pat::runtime::TCPSocket::Create(io_context);
 
-        auto res = unifex::sync_wait(
-            pat::runtime::promise(pat::runtime::_getaddrinfo::_sender{io_context.GetLoop(),
-                                                                      "localhost", "9000", hints})
-                .let([&socket](auto* res) {
-                    std::cout << "Resolved" << std::endl;
-                    return pat::runtime::promise(socket.Connect(res->ai_addr))
-                        .then([]() { std::cout << "Connected" << std::endl; })
-                        .let([&socket]() {
-                            constexpr std::string_view kMsg =
-                                "GET / HTTP/1.1\r\nHost: localhost:9000\r\nAccept: */*\r\n\r\n";
+        auto res = unifex::sync_wait(unifex::let_value_with(
+            [&io_context]() { return pat::runtime::TCPSocket::Create(io_context); },
+            [&io_context, &hints](pat::runtime::TCPSocket& socket) {
+                return pat::runtime::promise(pat::runtime::_getaddrinfo::_sender{
+                                                 io_context.GetLoop(), "localhost", "9000", hints})
+                    .let([&socket](auto* res) {
+                        std::cout << "Resolved" << std::endl;
+                        return pat::runtime::promise(socket.Connect(res->ai_addr))
+                            .then([]() { std::cout << "Connected" << std::endl; })
+                            .let([&socket]() {
+                                constexpr std::string_view kMsg =
+                                    "GET / HTTP/1.1\r\nHost: localhost:9000\r\nAccept: */*\r\n\r\n";
+                                return socket.Write(kMsg);
+                            });
+                    });
+            }));
 
-                            return socket.Write(kMsg);
-                        });
-                }));
     } catch (const std::error_code& ec) {
         std::cout << "Caught error_code: " << ec.message() << std::endl;
     } catch (const std::exception& e) {
