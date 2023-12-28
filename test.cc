@@ -66,8 +66,6 @@ int main() {
         hints.ai_socktype = SOCK_STREAM;       // TCP stream sockets
         hints.ai_flags = AI_PASSIVE;           // fill in my IP for me
 
-        auto socket = pat::runtime::TCPSocket::Create(io_context);
-
         auto res = unifex::sync_wait(unifex::let_value_with(
             [&io_context]() { return pat::runtime::TCPSocket::Create(io_context); },
             [&io_context, &hints](pat::runtime::TCPSocket& socket) {
