@@ -57,7 +57,7 @@ class _sender {
     _sender &operator=(_sender &&other) noexcept;
     ~_sender();
 
-    auto connect(unifex::receiver_of<File> auto &&rec) {
+    auto connect(unifex::receiver_of<File> auto &&rec) && {
         return _op{std::forward<decltype(rec)>(rec), loop_, std::move(path_), flags_, mode_};
     }
 

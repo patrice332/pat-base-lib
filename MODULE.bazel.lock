@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "280b24ee8386b9d8fa981ddd4ae21bd312676041a4694b04ba717e9e40f70b97",
+  "moduleFileHash": "f647d48794f932ce187670327d0ae45456de6c672818586c8a5cadc798f55fb4",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -44,7 +44,7 @@
               "tagName": "toolchain",
               "attributeValues": {
                 "cxx_standard": {
-                  "linux-x86_64": "c++20"
+                  "linux-x86_64": "c++23"
                 },
                 "llvm_version": "17.0.6",
                 "sha256": {
@@ -2288,7 +2288,7 @@
               "cxx_builtin_include_directories": {},
               "cxx_flags": {},
               "cxx_standard": {
-                "linux-x86_64": "c++20"
+                "linux-x86_64": "c++23"
               },
               "dbg_compile_flags": {},
               "link_flags": {},

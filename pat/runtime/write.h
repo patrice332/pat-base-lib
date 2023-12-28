@@ -62,7 +62,7 @@ class _sender {
     _sender &operator=(_sender &&other) noexcept;
     ~_sender();
 
-    auto connect(unifex::receiver_of<std::size_t> auto &&rec) {
+    auto connect(unifex::receiver_of<std::size_t> auto &&rec) && {
         return _op{std::forward<decltype(rec)>(rec), loop_, file_descriptor_, msg_};
     }
 

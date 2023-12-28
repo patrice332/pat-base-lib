@@ -10,7 +10,7 @@ bazel_dep(name = "toolchains_llvm", version = "0.10.3")
 # Configure and register the toolchain.
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
 llvm.toolchain(
-    cxx_standard = {"linux-x86_64": "c++20"},
+    cxx_standard = {"linux-x86_64": "c++23"},
     llvm_version = "17.0.6",
     sha256 = {"linux-x86_64": "884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3"},
     strip_prefix = {

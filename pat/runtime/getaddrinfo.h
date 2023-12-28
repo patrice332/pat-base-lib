@@ -61,7 +61,7 @@ class _sender {
     _sender &operator=(_sender &&other) noexcept;
     ~_sender();
 
-    auto connect(unifex::receiver_of<struct addrinfo *> auto &&rec) {
+    auto connect(unifex::receiver_of<struct addrinfo *> auto &&rec) && {
         return _op{std::forward<decltype(rec)>(rec), loop_, std::move(node_), std::move(service_),
                    hints_};
     }

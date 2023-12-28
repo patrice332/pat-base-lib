@@ -21,7 +21,7 @@ class _sender<Sender>::type {
    public:
     explicit type(Sender&& send) : send_{std::move(send)} {}
 
-    auto connect(unifex::receiver auto&& rec) {
+    auto connect(unifex::receiver auto&& rec) && {
         return unifex::connect(std::move(send_), std::forward<decltype(rec)>(rec));
     }
 

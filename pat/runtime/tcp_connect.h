@@ -6,13 +6,13 @@
 #include "unifex/receiver_concepts.hpp"
 #include "uv.h"
 
-namespace pat::runtime::_close {
+namespace pat::runtime::_tcp_connect {
 
 template <unifex::receiver_of<> Receiver>
 class _op {
    public:
-    _op(Receiver &&rec, uv_loop_t *loop, int file_descriptor)
-        : rec_(std::move(rec)), loop_{loop}, file_descriptor_{file_descriptor} {}
+    _op(Receiver &&rec, uv_tcp_t *handle, const struct sockaddr *addr)
+        : rec_(std::move(rec)), handle_{handle}, addr_{addr} {}
 
     _op(_op const &) = delete;
     _op &operator=(_op const &) = delete;
@@ -21,13 +21,13 @@ class _op {
     ~_op() = default;
 
     void start() noexcept {
-        fs_op_.data = this;
-        uv_fs_close(loop_, &fs_op_, file_descriptor_, [](uv_fs_t *fs_op) {
+        connect_op_.data = this;
+        uv_tcp_connect(&connect_op_, handle_, addr_, [](uv_connect_t *req, int status) {
             // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-            auto *operation = reinterpret_cast<_op<Receiver> *>(fs_op->data);
-            if (fs_op->result < 0) {
+            auto *operation = reinterpret_cast<_op<Receiver> *>(req->data);
+            if (status < 0) {
                 std::move(operation->rec_)
-                    .set_error(std::error_code(static_cast<int>(errno), std::generic_category()));
+                    .set_error(std::error_code(static_cast<int>(status), std::generic_category()));
                 return;
             }
 
@@ -37,14 +37,14 @@ class _op {
 
    private:
     Receiver rec_;
-    uv_loop_t *loop_;
-    int file_descriptor_;
-    uv_fs_t fs_op_{};
+    uv_tcp_t *handle_;
+    struct sockaddr const *addr_;
+    uv_connect_t connect_op_{};
 };
 
 class _sender {
    public:
-    _sender(uv_loop_t *loop, int file_descriptor);
+    _sender(uv_tcp_t *handle, const struct sockaddr *addr);
     _sender(_sender const &) = delete;
     _sender &operator=(_sender const &) = delete;
     _sender(_sender &&other) noexcept;
@@ -53,7 +53,7 @@ class _sender {
     ~_sender();
 
     auto connect(unifex::receiver_of<> auto &&rec) && {
-        return _op{std::forward<decltype(rec)>(rec), loop_, file_descriptor_};
+        return _op{std::forward<decltype(rec)>(rec), handle_, addr_};
     }
 
     template <template <typename...> class Variant, template <typename...> class Tuple>
@@ -65,8 +65,8 @@ class _sender {
     static constexpr bool is_always_scheduler_affine = false;
 
    private:
-    uv_loop_t *loop_;
-    int file_descriptor_;
+    uv_tcp_t *handle_;
+    struct sockaddr const *addr_;
 };
 
-}  // namespace pat::runtime::_close
+}  // namespace pat::runtime::_tcp_connect

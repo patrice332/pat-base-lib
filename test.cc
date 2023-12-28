@@ -9,6 +9,8 @@
 #include "pat/runtime/file_fwd.h"
 #include "pat/runtime/getaddrinfo.h"
 #include "pat/runtime/io_context.h"
+#include "pat/runtime/promise.h"
+#include "pat/runtime/tcp_socket.h"
 #include "unifex/sync_wait.hpp"
 
 int main() {
@@ -20,7 +22,7 @@ int main() {
     std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
 
     try {
-        unifex::sync_wait(
+        auto waitable =
             pat::runtime::File::Open(io_context, "/tmp/test.out",
                                      UV_FS_O_CREAT | UV_FS_O_APPEND | UV_FS_O_WRONLY,
                                      S_IRUSR | S_IWUSR)
@@ -49,7 +51,9 @@ int main() {
                                       << std::endl;
                             return file.Close(io_context);
                         });
-                }));
+                });
+        std::cout << "Size of waitable: " << sizeof(waitable) << std::endl;
+        unifex::sync_wait(std::move(waitable));
 
         std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
 
@@ -60,36 +64,17 @@ int main() {
         hints.ai_socktype = SOCK_STREAM;       // TCP stream sockets
         hints.ai_flags = AI_PASSIVE;           // fill in my IP for me
 
-        pat::runtime::_getaddrinfo::_sender get_add_info_snd{io_context.GetLoop(),
-                                                             "www.example.net", "3490", hints};
+        auto socket = pat::runtime::TCPSocket::Create(io_context);
 
-        auto res_gai = unifex::sync_wait(std::move(get_add_info_snd));
-        if (res_gai) {
-            auto* res = res_gai.value();
-            for (auto* pointer = res; pointer != nullptr; pointer = pointer->ai_next) {
-                void* addr = nullptr;
-                std::string ipver;
-                std::array<char, INET6_ADDRSTRLEN> ipstr{};
-
-                // get the pointer to the address itself,
-                // different fields in IPv4 and IPv6:
-                if (pointer->ai_family == AF_INET) {  // IPv4
-                    // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-                    auto* ipv4 = reinterpret_cast<struct sockaddr_in*>(pointer->ai_addr);
-                    addr = &(ipv4->sin_addr);
-                    ipver = "IPv4";
-                } else {  // IPv6
-                    // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-                    auto* ipv6 = reinterpret_cast<struct sockaddr_in6*>(pointer->ai_addr);
-                    addr = &(ipv6->sin6_addr);
-                    ipver = "IPv6";
-                }
-
-                // convert the IP to a string and print it:
-                inet_ntop(pointer->ai_family, addr, ipstr.data(), ipstr.size());
-                printf("  %s: %s\n", ipver.c_str(), ipstr.data());
-            }
-        }
+        auto res = unifex::sync_wait(
+            pat::runtime::promise(pat::runtime::_getaddrinfo::_sender{
+                                      io_context.GetLoop(), "www.example.net", "80", hints})
+                .let([&socket](auto* res) {
+                    std::cout << "Resolved" << std::endl;
+                    return pat::runtime::promise(socket.Connect(res->ai_addr)).then([]() {
+                        std::cout << "Connected" << std::endl;
+                    });
+                }));
     } catch (const std::error_code& ec) {
         std::cout << "Caught error_code: " << ec.message() << std::endl;
     } catch (const std::exception& e) {
