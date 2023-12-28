@@ -1,6 +1,8 @@
 #pragma once
 
 #include "pat/runtime/io_context.h"
+#include "pat/runtime/promise.h"
+#include "pat/runtime/stream_read.h"
 #include "pat/runtime/stream_write.h"
 #include "unifex/sender_concepts.hpp"
 #include "uv.h"
@@ -18,7 +20,14 @@ class Stream {
 
     unifex::sender auto Write(std::span<const char> msg) {
         // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-        return _stream_write::_sender(&reinterpret_cast<Derived*>(this)->StreamHandle(), msg);
+        return pat::runtime::promise(
+            _stream_write::_sender(&reinterpret_cast<Derived*>(this)->StreamHandle(), msg));
+    }
+
+    unifex::sender auto Read(std::span<char> msg) {
+        // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
+        return pat::runtime::promise(
+            _stream_read::_sender(&reinterpret_cast<Derived*>(this)->StreamHandle(), msg));
     }
 
    protected:

@@ -12,6 +12,7 @@
 #include "pat/runtime/promise.h"
 #include "pat/runtime/tcp_socket.h"
 #include "unifex/let_value_with.hpp"
+#include "unifex/repeat_effect_until.hpp"
 #include "unifex/sync_wait.hpp"
 
 int main() {
@@ -80,10 +81,32 @@ int main() {
                                 constexpr std::string_view kMsg =
                                     "GET / HTTP/1.1\r\nHost: localhost:9000\r\nAccept: */*\r\n\r\n";
                                 return socket.Write(kMsg);
+                            })
+                            .let([&socket](auto&&) {
+                                return unifex::let_value_with(
+                                    []() { return std::vector<char>{}; },
+                                    [&socket](std::vector<char>& buf) {
+                                        buf.resize(65536);
+                                        return socket.Read(buf)
+                                            .then([&buf](std::size_t bytes_read) {
+                                                std::cout
+                                                    << "Read:\n"
+                                                    << std::string_view{std::span{buf}.subspan(
+                                                           0, bytes_read)}
+                                                    << std::endl;
+                                            })
+                                            .let([&buf, &socket]() { return socket.Read(buf); })
+                                            .then([&buf](std::size_t bytes_read) {
+                                                std::cout
+                                                    << "Read:\n"
+                                                    << std::string_view{std::span{buf}.subspan(
+                                                           0, bytes_read)}
+                                                    << std::endl;
+                                            });
+                                    });
                             });
                     });
             }));
-
     } catch (const std::error_code& ec) {
         std::cout << "Caught error_code: " << ec.message() << std::endl;
     } catch (const std::exception& e) {
