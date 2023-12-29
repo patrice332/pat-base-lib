@@ -1,0 +1,15 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "io",
+    srcs = [
+        "io.cc",
+    ],
+    hdrs = [
+        "io.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_facebook_libunifex//:libunifex",
+    ],
+)

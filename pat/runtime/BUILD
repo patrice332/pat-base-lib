@@ -49,6 +49,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":io_context",
+        "//pat/io",
         "@com_facebook_libunifex//:libunifex",
         "@com_github_libuv//:libuv",
     ],

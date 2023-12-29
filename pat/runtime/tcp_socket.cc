@@ -1,5 +1,6 @@
 #include "pat/runtime/tcp_socket.h"
 
+#include "pat/io/io.h"
 #include "pat/runtime/stream.h"
 
 namespace pat::runtime {
@@ -19,5 +20,9 @@ uv_stream_t& TCPSocket::StreamHandle() { return *reinterpret_cast<uv_stream_t*>(
 uv_stream_t const& TCPSocket::StreamHandle() const {
     return *reinterpret_cast<uv_stream_t const*>(&handle_);
 }
+
+static_assert(io::Reader<TCPSocket>, "File is not an io::Reader");
+static_assert(io::Writer<TCPSocket>, "File is not an io::Writer");
+static_assert(io::Closer<TCPSocket>, "File is not an io::Closer");
 
 }  // namespace pat::runtime
