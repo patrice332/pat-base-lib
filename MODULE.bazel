@@ -70,3 +70,11 @@ http_archive(
     strip_prefix = "libunifex-0.4.0",
     urls = ["https://github.com/facebookexperimental/libunifex/archive/refs/tags/v0.4.0.tar.gz"],
 )
+
+http_archive(
+    name = "com_nodejs_llhttp",
+    build_file = "//third_party/com_nodejs_llhttp:llhttp.BUILD",
+    sha256 = "49405a7bcb4312b29b91408ee1395de3bc3b29e3bdd10380dc4eb8210912f295",
+    strip_prefix = "llhttp-release-v9.1.3",
+    urls = ["https://github.com/nodejs/llhttp/archive/refs/tags/release/v9.1.3.tar.gz"],
+)
