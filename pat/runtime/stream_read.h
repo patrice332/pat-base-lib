@@ -33,16 +33,19 @@ class _op {
                 buf->len = std::min(suggested_size, operation->msg_.size());
             },
             [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+                uv_read_stop(stream);
                 // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
                 auto *operation = reinterpret_cast<_op<Receiver> *>(stream->data);
                 if (nread < 0) {
+                    if (nread == UV_EOF) {
+                        unifex::set_done(std::move(operation->rec_));
+                        return;
+                    }
                     std::move(operation->rec_)
                         .set_error(
                             std::error_code(static_cast<int>(nread), std::generic_category()));
                     return;
                 }
-
-                uv_read_stop(stream);
                 std::move(operation->rec_).set_value(static_cast<std::size_t>(nread));
             });
     }

@@ -2,6 +2,7 @@
 
 #include "pat/runtime/io_context.h"
 #include "pat/runtime/promise.h"
+#include "pat/runtime/stream_close.h"
 #include "pat/runtime/stream_read.h"
 #include "pat/runtime/stream_write.h"
 #include "unifex/sender_concepts.hpp"
@@ -16,7 +17,13 @@ class Stream {
     Stream& operator=(const Stream&) = delete;
     Stream(Stream&& other) noexcept = default;
     Stream& operator=(Stream&& other) noexcept = default;
-    virtual ~Stream() = default;
+    virtual ~Stream() {
+        auto* handle =
+            reinterpret_cast<uv_handle_t*>(&reinterpret_cast<Derived*>(this)->StreamHandle());
+        if (!static_cast<bool>(uv_is_closing(handle))) {
+            std::terminate();
+        }
+    }
 
     unifex::sender auto Write(std::span<const char> msg) {
         // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
@@ -28,6 +35,11 @@ class Stream {
         // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
         return pat::runtime::promise(
             _stream_read::_sender(&reinterpret_cast<Derived*>(this)->StreamHandle(), msg));
+    }
+
+    unifex::sender auto Close() {
+        return pat::runtime::promise(
+            _stream_close::_sender(&reinterpret_cast<Derived*>(this)->StreamHandle()));
     }
 
    protected:

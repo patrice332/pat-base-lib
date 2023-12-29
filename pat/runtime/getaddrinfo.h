@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <system_error>
+
 #include "unifex/blocking.hpp"
 #include "unifex/receiver_concepts.hpp"
 #include "uv.h"

@@ -11,6 +11,8 @@
 #include "pat/runtime/io_context.h"
 #include "pat/runtime/promise.h"
 #include "pat/runtime/tcp_socket.h"
+#include "unifex/just_done.hpp"
+#include "unifex/just_error.hpp"
 #include "unifex/let_value_with.hpp"
 #include "unifex/repeat_effect_until.hpp"
 #include "unifex/sync_wait.hpp"
@@ -22,6 +24,8 @@ int main() {
     std::array<char, msg.size()> buf{};
 
     std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
+
+    unifex::let_done(unifex::just(), []() { return unifex::just(); });
 
     try {
         auto waitable =
@@ -74,7 +78,10 @@ int main() {
                     .let([&socket](auto* res) {
                         std::cout << "Resolved" << std::endl;
                         return pat::runtime::promise(socket.Connect(res->ai_addr))
-                            .then([]() { std::cout << "Connected" << std::endl; })
+                            .then([res]() {
+                                uv_freeaddrinfo(res);
+                                std::cout << "Connected" << std::endl;
+                            })
                             .let([&socket]() {
                                 constexpr std::string_view kMsg =
                                     "GET / HTTP/1.1\r\nHost: localhost:9000\r\nAccept: */*\r\n\r\n";
@@ -102,6 +109,15 @@ int main() {
                                                     << std::endl;
                                             });
                                     });
+                            })
+                            .let([&socket]() { return socket.Close(); })
+                            .let_done([&socket]() {
+                                return socket.Close().let([]() { return unifex::just_done(); });
+                            })
+                            .let_error([&socket](auto&& error) {
+                                return socket.Close().let([&error]() {
+                                    return unifex::just_error(std::forward<decltype(error)>(error));
+                                });
                             });
                     });
             }));
