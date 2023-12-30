@@ -9,7 +9,7 @@ cc_library(
         "io_context.h",
     ],
     implementation_deps = [
-        "@com_github_libuv//:libuv",
+        "@libuv",
     ],
 )
 
@@ -50,7 +50,7 @@ cc_library(
     deps = [
         ":io_context",
         "//pat/io",
-        "@com_facebook_libunifex//:libunifex",
-        "@com_github_libuv//:libuv",
+        "@libunifex",
+        "@libuv",
     ],
 )
