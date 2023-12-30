@@ -4,6 +4,7 @@
 #include <span>
 #include <system_error>
 
+#include "pat/runtime/libuv_errors.h"
 #include "unifex/blocking.hpp"
 #include "unifex/receiver_concepts.hpp"
 #include "uv.h"
@@ -36,7 +37,7 @@ class _op {
                 if (fs_op->result < 0) {
                     std::move(operation->rec_)
                         .set_error(
-                            std::error_code(static_cast<int>(errno), std::generic_category()));
+                            std::error_code(static_cast<int>(fs_op->result), LibUVErrCategory));
                     return;
                 }
 

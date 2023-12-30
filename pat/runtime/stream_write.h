@@ -4,6 +4,7 @@
 #include <span>
 #include <system_error>
 
+#include "pat/runtime/libuv_errors.h"
 #include "unifex/blocking.hpp"
 #include "unifex/receiver_concepts.hpp"
 #include "uv.h"
@@ -28,19 +29,19 @@ class _op {
 
     void start() noexcept {
         write_op_.data = this;
-        uv_write(&write_op_, stream_handle_, msg_.data(), msg_.size(),
-                 [](uv_write_t *fs_op, int status) {
-                     // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-                     auto *operation = reinterpret_cast<_op<Receiver> *>(fs_op->data);
-                     if (status < 0) {
-                         std::move(operation->rec_)
-                             .set_error(std::error_code(static_cast<int>(status),
-                                                        std::generic_category()));
-                         return;
-                     }
+        uv_write(
+            &write_op_, stream_handle_, msg_.data(), msg_.size(),
+            [](uv_write_t *fs_op, int status) {
+                // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
+                auto *operation = reinterpret_cast<_op<Receiver> *>(fs_op->data);
+                if (status < 0) {
+                    std::move(operation->rec_)
+                        .set_error(std::error_code(static_cast<int>(status), LibUVErrCategory));
+                    return;
+                }
 
-                     std::move(operation->rec_).set_value(static_cast<std::size_t>(status));
-                 });
+                std::move(operation->rec_).set_value(static_cast<std::size_t>(status));
+            });
     }
 
    private:

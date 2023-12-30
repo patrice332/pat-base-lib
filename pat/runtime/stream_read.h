@@ -4,6 +4,7 @@
 #include <span>
 #include <system_error>
 
+#include "pat/runtime/libuv_errors.h"
 #include "unifex/blocking.hpp"
 #include "unifex/receiver_concepts.hpp"
 #include "uv.h"
@@ -42,8 +43,7 @@ class _op {
                         return;
                     }
                     std::move(operation->rec_)
-                        .set_error(
-                            std::error_code(static_cast<int>(nread), std::generic_category()));
+                        .set_error(std::error_code(static_cast<int>(nread), LibUVErrCategory));
                     return;
                 }
                 std::move(operation->rec_).set_value(static_cast<std::size_t>(nread));
