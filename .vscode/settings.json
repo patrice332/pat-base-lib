@@ -1,0 +1,4 @@
+{
+  "clangd.path": "./external/toolchains_llvm~0.10.3~llvm~llvm_toolchain_llvm/bin/clangd",
+  "C_Cpp.intelliSenseEngine": "disabled"
+}
