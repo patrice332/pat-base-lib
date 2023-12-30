@@ -1,5 +1,6 @@
 #pragma once
 
+#include <expected>
 #include <span>
 #include <type_traits>
 
@@ -29,12 +30,12 @@ concept AsyncCloser = requires(T self) {
 
 template <typename T>
 concept ImmReader = requires(T self, std::span<char> read_buf) {
-    { self.Read(read_buf) } -> std::convertible_to<std::size_t>;
+    { self.Read(read_buf) } -> std::convertible_to<std::expected<std::size_t, std::error_code>>;
 };
 
 template <typename T>
 concept ImmWriter = requires(T self, std::span<const char> write_buf) {
-    { self.Write(write_buf) } -> std::convertible_to<std::size_t>;
+    { self.Write(write_buf) } -> std::convertible_to<std::expected<std::size_t, std::error_code>>;
 };
 
 template <typename T>

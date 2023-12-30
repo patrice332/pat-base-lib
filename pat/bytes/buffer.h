@@ -1,8 +1,10 @@
 #pragma once
 
+#include <expected>
 #include <span>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 namespace pat::bytes {
 
@@ -11,8 +13,8 @@ struct Buffer {
     explicit Buffer(std::string&& str);
     explicit Buffer(std::string_view str);
 
-    std::size_t Read(std::span<char> buf);
-    std::size_t Write(std::span<const char> buf);
+    std::expected<std::size_t, std::error_code> Read(std::span<char> buf);
+    std::expected<std::size_t, std::error_code> Write(std::span<const char> buf);
 
     constexpr std::size_t Size() const {
         return in_view_ ? buf_view_.size() - pos_ : buf_.size() - pos_;

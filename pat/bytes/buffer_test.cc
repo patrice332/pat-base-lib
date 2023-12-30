@@ -84,20 +84,20 @@ TEST_F(BufferTesting, StringViewMultiRead) {
     constexpr std::string_view kMsg = "This is a test string!!!!";
     std::array<char, 4> read_buf{};
     Buffer buf{kMsg};
-    std::size_t read_bytes = buf.Read(read_buf);
-    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes}), "This");
+    auto read_bytes = buf.Read(read_buf);
+    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes.value_or(0)}), "This");
     read_bytes = buf.Read(read_buf);
-    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes}), " is ");
+    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes.value_or(0)}), " is ");
     read_bytes = buf.Read(read_buf);
-    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes}), "a te");
+    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes.value_or(0)}), "a te");
     read_bytes = buf.Read(read_buf);
-    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes}), "st s");
+    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes.value_or(0)}), "st s");
     read_bytes = buf.Read(read_buf);
-    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes}), "trin");
+    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes.value_or(0)}), "trin");
     read_bytes = buf.Read(read_buf);
-    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes}), "g!!!");
+    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes.value_or(0)}), "g!!!");
     read_bytes = buf.Read(read_buf);
-    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes}), "!");
+    EXPECT_EQ((std::string_view{read_buf.data(), read_bytes.value_or(0)}), "!");
     EXPECT_EQ(buf.Size(), 0UL);
 }
 
