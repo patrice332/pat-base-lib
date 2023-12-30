@@ -1,4 +1,9 @@
 {
-  "clangd.path": "./external/toolchains_llvm~0.10.3~llvm~llvm_toolchain_llvm/bin/clangd",
-  "C_Cpp.intelliSenseEngine": "disabled"
+  "clangd.path": "./external/toolchains_llvm~override~llvm~llvm_toolchain_llvm/bin/clangd",
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "clangd.arguments": [
+    "--header-insertion=never",
+    "--compile-commands-dir=${workspaceFolder}/",
+    "--query-driver=**"
+  ]
 }

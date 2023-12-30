@@ -35,7 +35,7 @@ lint:
     compiler_override_paths:
       - os: linux
         cpu: x86_64
-        path: external/toolchains_llvm~0.10.3~llvm~llvm_toolchain_llvm/bin/clang
+        path: external/toolchains_llvm~override~llvm~llvm_toolchain_llvm/bin/clang
 actions:
   enabled:
     - bazel-compile-commands

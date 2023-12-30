@@ -33,6 +33,7 @@ std::expected<std::size_t, std::error_code> Buffer::Write(std::span<const char> 
         if (testing::alloc_counter != nullptr) {
             *testing::alloc_counter = *testing::alloc_counter + 1;
         }
+        buf_.reserve(buf_view_.size() + buf.size());
         buf_.assign(buf_view_);
         in_view_ = false;
     }
