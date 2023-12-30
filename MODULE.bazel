@@ -6,24 +6,6 @@ module(
 )
 
 bazel_dep(name = "toolchains_llvm", version = "0.10.3")
-
-# Configure and register the toolchain.
-llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
-llvm.toolchain(
-    cxx_standard = {"linux-x86_64": "c++23"},
-    llvm_version = "17.0.6",
-    sha256 = {"linux-x86_64": "884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3"},
-    strip_prefix = {
-        "linux-x86_64": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04",
-    },
-    urls = {
-        "linux-x86_64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz"],
-    },
-)
-use_repo(llvm, "llvm_toolchain")
-
-register_toolchains("@llvm_toolchain//:all")
-
 bazel_dep(name = "abseil-cpp", version = "20230802.0")
 bazel_dep(name = "googletest", version = "1.14.0")
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
@@ -34,16 +16,58 @@ bazel_dep(name = "rules_cc", version = "0.0.9")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+git_override(
+    module_name = "toolchains_llvm",
+    commit = "a6f32b6db9e644e8f4e3fa52e741358bc2bf99ae",
+    remote = "https://github.com/rrbutani/bazel-toolchain.git",
+)
+
+http_archive(
+    name = "org_chromium_sysroot_linux_x64",
+    build_file_content = """
+filegroup(
+  name = "sysroot",
+  srcs = glob(["*/**"]),
+  visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "47c02efd920c7f9c6b98b1498443170aa6102507d0672af5e794070833ef7454",
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/4c00ba2ad61ca7cc39392f192aa39420e086777c/debian_bullseye_amd64_sysroot.tar.xz"],
+)
+
+# Configure and register the toolchain.
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(
+    cxx_standard = {"linux-x86_64": "c++23"},
+    llvm_version = "17.0.6",
+    sha256 = {"linux-x86_64": "884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3"},
+    strip_prefix = {
+        "linux-x86_64": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04",
+    },
+    sysroot = {
+        "linux-x86_64": "chromium_x64_sysroot",
+    },
+    sysroot_label_map = {
+        "@org_chromium_sysroot_linux_x64//:sysroot": "chromium_x64_sysroot",
+    },
+    urls = {
+        "linux-x86_64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz"],
+    },
+)
+use_repo(llvm, "llvm_toolchain")
+
+register_toolchains("@llvm_toolchain//:all")
+
 http_archive(
     name = "rules_boost",
-    sha256 = "f3038ed0e19f68920396fbe1a824cde8ab321e131c9fe59826f8ee510b958569",
-    strip_prefix = "rules_boost-ce2b65fd6d1494aadb2d8c99ce26aa222ab72486",
     patch_args = [
         "-p1",
     ],
     patches = [
         "@//third_party/rules_boost:openssl.patch",
     ],
+    sha256 = "f3038ed0e19f68920396fbe1a824cde8ab321e131c9fe59826f8ee510b958569",
+    strip_prefix = "rules_boost-ce2b65fd6d1494aadb2d8c99ce26aa222ab72486",
     url = "https://github.com/nelhage/rules_boost/archive/ce2b65fd6d1494aadb2d8c99ce26aa222ab72486.tar.gz",
 )
 

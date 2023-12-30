@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "6925774b00cc36fa85616ba312f55fa0b21626138527f1ae53618db3b4de8935",
+  "moduleFileHash": "81977dac365f992d17f5975b2fef363773b0b5483cc5ae2a46207dd6bc69feb8",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -27,50 +27,6 @@
       ],
       "extensionUsages": [
         {
-          "extensionBzlFile": "@toolchains_llvm//toolchain/extensions:llvm.bzl",
-          "extensionName": "llvm",
-          "usingModule": "<root>",
-          "location": {
-            "file": "@@//:MODULE.bazel",
-            "line": 11,
-            "column": 21
-          },
-          "imports": {
-            "llvm_toolchain": "llvm_toolchain"
-          },
-          "devImports": [],
-          "tags": [
-            {
-              "tagName": "toolchain",
-              "attributeValues": {
-                "cxx_standard": {
-                  "linux-x86_64": "c++23"
-                },
-                "llvm_version": "17.0.6",
-                "sha256": {
-                  "linux-x86_64": "884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3"
-                },
-                "strip_prefix": {
-                  "linux-x86_64": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04"
-                },
-                "urls": {
-                  "linux-x86_64": [
-                    "https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
-                  ]
-                }
-              },
-              "devDependency": false,
-              "location": {
-                "file": "@@//:MODULE.bazel",
-                "line": 12,
-                "column": 15
-              }
-            }
-          ],
-          "hasDevUseExtension": false,
-          "hasNonDevUseExtension": true
-        },
-        {
           "extensionBzlFile": "//:MODULE.bazel",
           "extensionName": "_repo_rules",
           "usingModule": "<root>",
@@ -80,6 +36,7 @@
             "column": 0
           },
           "imports": {
+            "org_chromium_sysroot_linux_x64": "org_chromium_sysroot_linux_x64",
             "rules_boost": "rules_boost",
             "boost": "boost",
             "libuv": "libuv",
@@ -91,21 +48,38 @@
             {
               "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
               "attributeValues": {
-                "sha256": "f3038ed0e19f68920396fbe1a824cde8ab321e131c9fe59826f8ee510b958569",
-                "strip_prefix": "rules_boost-ce2b65fd6d1494aadb2d8c99ce26aa222ab72486",
+                "build_file_content": "\nfilegroup(\n  name = \"sysroot\",\n  srcs = glob([\"*/**\"]),\n  visibility = [\"//visibility:public\"],\n)\n",
+                "sha256": "47c02efd920c7f9c6b98b1498443170aa6102507d0672af5e794070833ef7454",
+                "urls": [
+                  "https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/4c00ba2ad61ca7cc39392f192aa39420e086777c/debian_bullseye_amd64_sysroot.tar.xz"
+                ],
+                "name": "org_chromium_sysroot_linux_x64"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 25,
+                "column": 13
+              }
+            },
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+              "attributeValues": {
                 "patch_args": [
                   "-p1"
                 ],
                 "patches": [
                   "@//third_party/rules_boost:openssl.patch"
                 ],
+                "sha256": "f3038ed0e19f68920396fbe1a824cde8ab321e131c9fe59826f8ee510b958569",
+                "strip_prefix": "rules_boost-ce2b65fd6d1494aadb2d8c99ce26aa222ab72486",
                 "url": "https://github.com/nelhage/rules_boost/archive/ce2b65fd6d1494aadb2d8c99ce26aa222ab72486.tar.gz",
                 "name": "rules_boost"
               },
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 37,
+                "line": 61,
                 "column": 13
               }
             },
@@ -127,7 +101,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 50,
+                "line": 74,
                 "column": 13
               }
             },
@@ -145,7 +119,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 60,
+                "line": 84,
                 "column": 13
               }
             },
@@ -163,7 +137,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 68,
+                "line": 92,
                 "column": 13
               }
             },
@@ -181,8 +155,58 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 76,
+                "line": 100,
                 "column": 13
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@toolchains_llvm//toolchain/extensions:llvm.bzl",
+          "extensionName": "llvm",
+          "usingModule": "<root>",
+          "location": {
+            "file": "@@//:MODULE.bazel",
+            "line": 39,
+            "column": 21
+          },
+          "imports": {
+            "llvm_toolchain": "llvm_toolchain"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "cxx_standard": {
+                  "linux-x86_64": "c++23"
+                },
+                "llvm_version": "17.0.6",
+                "sha256": {
+                  "linux-x86_64": "884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3"
+                },
+                "strip_prefix": {
+                  "linux-x86_64": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04"
+                },
+                "sysroot": {
+                  "linux-x86_64": "chromium_x64_sysroot"
+                },
+                "sysroot_label_map": {
+                  "@org_chromium_sysroot_linux_x64//:sysroot": "chromium_x64_sysroot"
+                },
+                "urls": {
+                  "linux-x86_64": [
+                    "https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
+                  ]
+                }
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 40,
+                "column": 15
               }
             }
           ],
@@ -191,7 +215,7 @@
         }
       ],
       "deps": {
-        "toolchains_llvm": "toolchains_llvm@0.10.3",
+        "toolchains_llvm": "toolchains_llvm@_",
         "abseil-cpp": "abseil-cpp@20230802.0",
         "googletest": "googletest@1.14.0",
         "bazel_skylib": "bazel_skylib@1.5.0",
@@ -203,10 +227,10 @@
         "local_config_platform": "local_config_platform@_"
       }
     },
-    "toolchains_llvm@0.10.3": {
+    "toolchains_llvm@_": {
       "name": "toolchains_llvm",
-      "version": "0.10.3",
-      "key": "toolchains_llvm@0.10.3",
+      "version": "0.0.0",
+      "key": "toolchains_llvm@_",
       "repoName": "toolchains_llvm",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [],
@@ -217,20 +241,6 @@
         "platforms": "platforms@0.0.8",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "name": "toolchains_llvm~0.10.3",
-          "urls": [
-            "https://github.com/grailbio/bazel-toolchain/releases/download/0.10.3/toolchains_llvm-0.10.3.tar.gz"
-          ],
-          "integrity": "sha256-t80wHvew7OKNINPneGl6XjuBgoOTFQvtBIOMDFKWOgE=",
-          "strip_prefix": "toolchains_llvm-0.10.3",
-          "remote_patches": {},
-          "remote_patch_strip": 0
-        }
       }
     },
     "abseil-cpp@20230802.0": {
@@ -1325,18 +1335,30 @@
         "accumulatedFileDigests": {},
         "envVariables": {},
         "generatedRepoSpecs": {
+          "org_chromium_sysroot_linux_x64": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "build_file_content": "\nfilegroup(\n  name = \"sysroot\",\n  srcs = glob([\"*/**\"]),\n  visibility = [\"//visibility:public\"],\n)\n",
+              "sha256": "47c02efd920c7f9c6b98b1498443170aa6102507d0672af5e794070833ef7454",
+              "urls": [
+                "https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/4c00ba2ad61ca7cc39392f192aa39420e086777c/debian_bullseye_amd64_sysroot.tar.xz"
+              ],
+              "name": "_main~_repo_rules~org_chromium_sysroot_linux_x64"
+            }
+          },
           "rules_boost": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_archive",
             "attributes": {
-              "sha256": "f3038ed0e19f68920396fbe1a824cde8ab321e131c9fe59826f8ee510b958569",
-              "strip_prefix": "rules_boost-ce2b65fd6d1494aadb2d8c99ce26aa222ab72486",
               "patch_args": [
                 "-p1"
               ],
               "patches": [
                 "@@//third_party/rules_boost:openssl.patch"
               ],
+              "sha256": "f3038ed0e19f68920396fbe1a824cde8ab321e131c9fe59826f8ee510b958569",
+              "strip_prefix": "rules_boost-ce2b65fd6d1494aadb2d8c99ce26aa222ab72486",
               "url": "https://github.com/nelhage/rules_boost/archive/ce2b65fd6d1494aadb2d8c99ce26aa222ab72486.tar.gz",
               "name": "_main~_repo_rules~rules_boost"
             }
@@ -2373,17 +2395,17 @@
         }
       }
     },
-    "@@toolchains_llvm~0.10.3//toolchain/extensions:llvm.bzl%llvm": {
+    "@@toolchains_llvm~override//toolchain/extensions:llvm.bzl%llvm": {
       "general": {
-        "bzlTransitiveDigest": "BazUosLKBs5ydZiCi9OwI9dYPBph5aEeG/bcpD+yBkM=",
+        "bzlTransitiveDigest": "Q4Fz+lQE6YtvW2Zd6Ix94nhcHsl8jUeyIr/NoslRYoQ=",
         "accumulatedFileDigests": {},
         "envVariables": {},
         "generatedRepoSpecs": {
           "llvm_toolchain": {
-            "bzlFile": "@@toolchains_llvm~0.10.3//toolchain:rules.bzl",
+            "bzlFile": "@@toolchains_llvm~override//toolchain:rules.bzl",
             "ruleClassName": "toolchain",
             "attributes": {
-              "name": "toolchains_llvm~0.10.3~llvm~llvm_toolchain",
+              "name": "toolchains_llvm~override~llvm~llvm_toolchain",
               "absolute_paths": false,
               "compile_flags": {},
               "coverage_compile_flags": {},
@@ -2402,17 +2424,23 @@
               "opt_compile_flags": {},
               "opt_link_flags": {},
               "stdlib": {},
-              "sysroot": {},
+              "sysroot": {
+                "linux-x86_64": "chromium_x64_sysroot"
+              },
+              "sysroot_label_map": {
+                "@@_main~_repo_rules~org_chromium_sysroot_linux_x64//:sysroot": "chromium_x64_sysroot"
+              },
               "target_settings": {},
               "toolchain_roots": {},
+              "toolchain_roots_label_map": {},
               "unfiltered_compile_flags": {}
             }
           },
           "llvm_toolchain_llvm": {
-            "bzlFile": "@@toolchains_llvm~0.10.3//toolchain:rules.bzl",
+            "bzlFile": "@@toolchains_llvm~override//toolchain:rules.bzl",
             "ruleClassName": "llvm",
             "attributes": {
-              "name": "toolchains_llvm~0.10.3~llvm~llvm_toolchain_llvm",
+              "name": "toolchains_llvm~override~llvm~llvm_toolchain_llvm",
               "alternative_llvm_sources": [],
               "auth_patterns": {},
               "distribution": "auto",
