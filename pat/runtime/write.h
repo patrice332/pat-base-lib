@@ -47,10 +47,10 @@ class _op {
     }
 
    private:
-    Receiver rec_;
-    uv_loop_t *loop_;
-    int file_descriptor_;
-    std::array<uv_buf_t, 1> msg_;
+    Receiver rec_{};
+    uv_loop_t *loop_{nullptr};
+    int file_descriptor_{-1};
+    std::array<uv_buf_t, 1> msg_{};
     uv_fs_t fs_op_{};
 };
 
@@ -71,15 +71,15 @@ class _sender {
     template <template <typename...> class Variant, template <typename...> class Tuple>
     using value_types = Variant<Tuple<std::size_t>>;
     template <template <typename...> class Variant>
-    using error_types = Variant<std::error_code>;
+    using error_types = Variant<std::exception_ptr>;
     static constexpr bool sends_done = false;
     static constexpr unifex::blocking_kind blocking = unifex::blocking_kind::never;
     static constexpr bool is_always_scheduler_affine = false;
 
    private:
-    uv_loop_t *loop_;
-    int file_descriptor_;
-    std::span<const char> msg_;
+    uv_loop_t *loop_{nullptr};
+    int file_descriptor_{-1};
+    std::span<const char> msg_{};
 };
 
 }  // namespace pat::runtime::_write

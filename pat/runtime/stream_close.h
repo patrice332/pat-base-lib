@@ -32,13 +32,13 @@ class _op {
     }
 
    private:
-    Receiver rec_;
-    uv_stream_t *stream_handle_;
+    Receiver rec_{};
+    uv_stream_t *stream_handle_{nullptr};
 };
 
 class _sender {
    public:
-    _sender(uv_stream_t *stream_handle_);
+    explicit _sender(uv_stream_t *stream_handle_);
     _sender(_sender const &) = delete;
     _sender &operator=(_sender const &) = delete;
     _sender(_sender &&other) noexcept;
@@ -53,13 +53,13 @@ class _sender {
     template <template <typename...> class Variant, template <typename...> class Tuple>
     using value_types = Variant<Tuple<>>;
     template <template <typename...> class Variant>
-    using error_types = Variant<std::error_code>;
+    using error_types = Variant<std::exception_ptr>;
     static constexpr bool sends_done = false;
     static constexpr unifex::blocking_kind blocking = unifex::blocking_kind::never;
     static constexpr bool is_always_scheduler_affine = false;
 
    private:
-    uv_stream_t *stream_handle_;
+    uv_stream_t *stream_handle_{nullptr};
 };
 
 }  // namespace pat::runtime::_stream_close

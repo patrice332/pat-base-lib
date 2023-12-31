@@ -1,17 +1,30 @@
 #pragma once
 
+#include <concepts>
 #include <expected>
 #include <span>
+#include <system_error>
 #include <type_traits>
 
 #include "unifex/sender_concepts.hpp"
 
 namespace pat::io {
 
+enum class IoError {
+    kSuccess,
+    kEOF,
+    kClosedPipe,
+    kNoProgress,
+    kShortBuffer,
+    kShortWrite,
+    kUnexpectedEOF,
+};
+std::error_code make_error_code(IoError error_code);
+
 template <typename From, typename To>
 concept _is_sender_convertible_to =
     unifex::sender<From> &&
-    std::convertible_to<unifex::sender_single_value_return_type_t<From>, To>;
+    unifex::convertible_to<unifex::sender_single_value_return_type_t<From>, To>;
 
 template <typename T>
 concept AsyncReader = requires(T self, std::span<char> read_buf) {
@@ -62,3 +75,8 @@ template <typename T>
 concept ReaderWriterCloser = Reader<T> && Writer<T> && Closer<T>;
 
 }  // namespace pat::io
+
+namespace std {
+template <>
+struct is_error_code_enum<pat::io::IoError> : true_type {};
+}  // namespace std

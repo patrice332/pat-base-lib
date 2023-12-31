@@ -1,10 +1,16 @@
 #include <fcntl.h>
 
+#include <cstddef>
 #include <exception>
 #include <iostream>
+#include <span>
+#include <string_view>
+#include <system_error>
 #include <thread>
 #include <unifex/any_sender_of.hpp>
+#include <vector>
 
+#include "pat/io/io.h"
 #include "pat/runtime/file.h"
 #include "pat/runtime/file_fwd.h"
 #include "pat/runtime/getaddrinfo.h"
@@ -21,7 +27,7 @@ int main() {
     auto io_context = pat::runtime::IOContext::Create();
 
     constexpr std::string_view msg = "This is a test\n";
-    std::array<char, msg.size()> buf{};
+    std::array<char, msg.size()> buf = {};
 
     std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
 
@@ -70,7 +76,7 @@ int main() {
         hints.ai_socktype = SOCK_STREAM;       // TCP stream sockets
         hints.ai_flags = AI_PASSIVE;           // fill in my IP for me
 
-        auto res = unifex::sync_wait(unifex::let_value_with(
+        unifex::sync_wait(unifex::let_value_with(
             [&io_context]() { return pat::runtime::TCPSocket::Create(io_context); },
             [&io_context, &hints](pat::runtime::TCPSocket& socket) {
                 return pat::runtime::promise(pat::runtime::_getaddrinfo::_sender{
@@ -114,9 +120,16 @@ int main() {
                             .let_done([&socket]() {
                                 return socket.Close().let([]() { return unifex::just_done(); });
                             })
-                            .let_error([&socket](auto&& error) {
-                                return socket.Close().let([&error]() {
-                                    return unifex::just_error(std::forward<decltype(error)>(error));
+                            .let_error([&socket](std::exception_ptr error) {
+                                return socket.Close().then([error]() {
+                                    try {
+                                        std::rethrow_exception(error);
+                                    } catch (const std::system_error& sys_err) {
+                                        if (sys_err.code() == pat::io::IoError::kEOF) {
+                                            return;
+                                        }
+                                        std::rethrow_exception(std::current_exception());
+                                    }
                                 });
                             });
                     });

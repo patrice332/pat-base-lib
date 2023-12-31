@@ -7,7 +7,7 @@
 
 namespace pat::runtime {
 
-class TCPSocket final : public Stream<TCPSocket> {
+class TCPSocket final : public Stream {
    public:
     static TCPSocket Create(IOContext& context);
     TCPSocket(const TCPSocket&) = delete;
@@ -21,11 +21,10 @@ class TCPSocket final : public Stream<TCPSocket> {
     }
 
    private:
-    friend class Stream<TCPSocket>;
     explicit TCPSocket(IOContext& context);
 
-    uv_stream_t& StreamHandle();
-    uv_stream_t const& StreamHandle() const;
+    uv_stream_t& StreamHandle() final;
+    uv_stream_t const& StreamHandle() const final;
 
     uv_tcp_t handle_{};
 };

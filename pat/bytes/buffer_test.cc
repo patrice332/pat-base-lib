@@ -18,7 +18,7 @@ class BufferTesting : public ::testing::Test {
     BufferTesting& operator=(const BufferTesting&) = delete;
     BufferTesting(BufferTesting&&) = delete;
     BufferTesting& operator=(BufferTesting&&) = delete;
-    ~BufferTesting() { testing::alloc_counter = nullptr; }
+    ~BufferTesting() override { testing::alloc_counter = nullptr; }
 
    protected:
     constexpr std::size_t Allocations() const { return allocations_; }
@@ -32,7 +32,7 @@ TEST_F(BufferTesting, asserts) {
     EXPECT_TRUE(io::Writer<Buffer>);
 }
 
-TEST_F(BufferTesting, empty) { Buffer buf; }
+TEST_F(BufferTesting, empty) { Buffer const buf; }
 
 TEST_F(BufferTesting, StringWriteWithSpace) {
     constexpr std::string_view kMsg = "This is a test string!!!";

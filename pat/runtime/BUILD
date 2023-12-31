@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "io_context",
@@ -54,5 +54,17 @@ cc_library(
         "//pat/io",
         "@libunifex",
         "@libuv",
+    ],
+)
+
+cc_test(
+    name = "tcp_socket_test",
+    srcs = [
+        "tcp_socket_test.cc",
+    ],
+    deps = [
+        ":runtime",
+        "//pat/io",
+        "@googletest//:gtest_main",
     ],
 )

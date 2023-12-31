@@ -35,8 +35,9 @@ class _op {
                 // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
                 auto *operation = reinterpret_cast<_op<Receiver> *>(getaddrinfo_op->data);
                 if (status < 0) {
-                    std::move(operation->rec_)
-                        .set_error(std::error_code(static_cast<int>(status), LibUVErrCategory));
+                    unifex::set_error(std::move(operation->rec_),
+                                      std::make_exception_ptr(std::system_error(std::error_code(
+                                          static_cast<int>(status), LibUVErrCategory))));
                     return;
                 }
 
@@ -46,7 +47,7 @@ class _op {
     }
 
    private:
-    Receiver rec_;
+    Receiver rec_{};
     uv_loop_t *loop_;
     std::string node_;
     std::string service_;
@@ -72,7 +73,7 @@ class _sender {
     template <template <typename...> class Variant, template <typename...> class Tuple>
     using value_types = Variant<Tuple<struct addrinfo *>>;
     template <template <typename...> class Variant>
-    using error_types = Variant<std::error_code>;
+    using error_types = Variant<std::exception_ptr>;
     static constexpr bool sends_done = false;
     static constexpr unifex::blocking_kind blocking = unifex::blocking_kind::never;
     static constexpr bool is_always_scheduler_affine = false;

@@ -29,25 +29,26 @@ class _op {
 
     void start() noexcept {
         write_op_.data = this;
-        uv_write(
-            &write_op_, stream_handle_, msg_.data(), msg_.size(),
-            [](uv_write_t *fs_op, int status) {
-                // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-                auto *operation = reinterpret_cast<_op<Receiver> *>(fs_op->data);
-                if (status < 0) {
-                    std::move(operation->rec_)
-                        .set_error(std::error_code(static_cast<int>(status), LibUVErrCategory));
-                    return;
-                }
+        uv_write(&write_op_, stream_handle_, msg_.data(), msg_.size(),
+                 [](uv_write_t *fs_op, int status) {
+                     // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
+                     auto *operation = reinterpret_cast<_op<Receiver> *>(fs_op->data);
+                     if (status < 0) {
+                         unifex::set_error(
+                             std::move(operation->rec_),
+                             std::make_exception_ptr(std::system_error(
+                                 std::error_code(static_cast<int>(status), LibUVErrCategory))));
+                         return;
+                     }
 
-                std::move(operation->rec_).set_value(static_cast<std::size_t>(status));
-            });
+                     std::move(operation->rec_).set_value(static_cast<std::size_t>(status));
+                 });
     }
 
    private:
-    Receiver rec_;
-    uv_stream_t *stream_handle_;
-    std::array<uv_buf_t, 1> msg_;
+    Receiver rec_{};
+    uv_stream_t *stream_handle_{nullptr};
+    std::array<uv_buf_t, 1> msg_{};
     uv_write_t write_op_{};
 };
 
@@ -68,14 +69,14 @@ class _sender {
     template <template <typename...> class Variant, template <typename...> class Tuple>
     using value_types = Variant<Tuple<std::size_t>>;
     template <template <typename...> class Variant>
-    using error_types = Variant<std::error_code>;
+    using error_types = Variant<std::exception_ptr>;
     static constexpr bool sends_done = false;
     static constexpr unifex::blocking_kind blocking = unifex::blocking_kind::never;
     static constexpr bool is_always_scheduler_affine = false;
 
    private:
-    uv_stream_t *stream_handle_;
-    std::span<const char> msg_;
+    uv_stream_t *stream_handle_{nullptr};
+    std::span<const char> msg_{};
 };
 
 }  // namespace pat::runtime::_stream_write

@@ -22,6 +22,8 @@ Checks: >-
   -performance-unnecessary-value-param,
   -readability-magic-numbers,
   -performance-trivially-destructible,
+  -performance-avoid-endl,
+  -cppcoreguidelines-init-variables
 
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold

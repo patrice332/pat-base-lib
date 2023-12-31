@@ -21,9 +21,9 @@ class LimitedReader<R, typename std::enable_if<std::is_lvalue_reference_v<R>>::t
     auto Read(std::span<char> buf) {
         if (n_ == 0) {
             if constexpr (AsyncReader<R>) {
-                throw std::error_code(UV_EOF, std::generic_category());
+                throw std::system_error(IoError::kEOF);
             } else {
-                return std::error_code(UV_EOF, std::generic_category());
+                return std::unexpected(make_error_code(IoError::kEOF));
             }
         }
         if (buf.size() > n_) {
@@ -47,9 +47,9 @@ class LimitedReader<R, typename std::enable_if<std::is_rvalue_reference_v<R>>::t
     auto Read(std::span<char> buf) {
         if (n_ == 0) {
             if constexpr (AsyncReader<R>) {
-                throw std::error_code(UV_EOF, std::generic_category());
+                throw std::system_error(IoError::kEOF);
             } else {
-                return std::error_code(UV_EOF, std::generic_category());
+                return std::unexpected(make_error_code(IoError::kEOF));
             }
         }
         if (buf.size() > n_) {
