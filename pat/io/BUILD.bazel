@@ -13,3 +13,19 @@ cc_library(
         "@libunifex",
     ],
 )
+
+cc_library(
+    name = "limited_reader",
+    srcs = [
+        "limited_reader.cc",
+    ],
+    hdrs = [
+        "limited_reader.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":io",
+        "@libunifex",
+        "@libuv",
+    ],
+)
