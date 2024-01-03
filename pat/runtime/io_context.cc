@@ -30,7 +30,7 @@ context::context() noexcept {
     thread_.swap(new_t);
 }
 
-void context::read_cb(uv_stream_s* req, long status, const uv_buf_t*) {
+void context::read_cb(uv_stream_s* req, long status, const uv_buf_t* /*unused*/) {
     auto* self = reinterpret_cast<context*>(req->data);
     if (status <= 0) {
         return;
@@ -44,7 +44,7 @@ context::~context() {
     if (thread_.joinable()) {
         thread_.join();
     }
-    int rv = uv_loop_close(&uv_loop_);
+    int const rv = uv_loop_close(&uv_loop_);
     if (rv != 0) {
         std::cerr << "Loop close failed: " << uv_err_name(rv) << ": " << uv_strerror(rv)
                   << std::endl;
@@ -53,7 +53,7 @@ context::~context() {
 
 void context::run() {
     thread_id_ = std::this_thread::get_id();
-    while (stop_ != true) {
+    while (!stop_) {
         uv_run(&uv_loop_, UV_RUN_DEFAULT);
     }
 }
@@ -73,14 +73,13 @@ void context::dequeueall() {
 }
 
 void context::stop() {
-    auto wait_snd = get_scheduler().schedule().let([this]() {
+    unifex::sync_wait(get_scheduler().schedule().let([this]() {
         return promise(_stream_close::_sender{reinterpret_cast<uv_stream_t*>(&read_pipe_)})
             .then([this]() {
                 stop_ = true;
                 uv_stop(&uv_loop_);
             });
-    });
-    unifex::sync_wait(std::move(wait_snd));
+    }));
 }
 
 uv_loop_s* context::GetLoop() {
@@ -89,7 +88,7 @@ uv_loop_s* context::GetLoop() {
 }
 
 void context::enqueue(task_base* task) {
-    std::unique_lock lock{mutex_};
+    std::unique_lock const lock{mutex_};
     if (head_ == nullptr) {
         head_ = task;
     } else {
@@ -98,7 +97,7 @@ void context::enqueue(task_base* task) {
     tail_ = task;
     task->next_ = nullptr;
     char i = 0;
-    int wrote_bytes = ::write(pipes_[1], &i, sizeof(i));
+    (void)::write(pipes_[1], &i, sizeof(i));
 }
 
 }  // namespace pat::runtime::_io_context

@@ -28,31 +28,32 @@ class _op {
     void start() noexcept {
         stream_handle_->data = this;
         shutdown_req_.data = this;
-        if (uv_is_writable((uv_stream_t *)stream_handle_) && stream_handle_->write_queue_size > 0) {
-            uv_shutdown(&shutdown_req_, reinterpret_cast<uv_stream_t *>(stream_handle_),
-                        [](uv_shutdown_s *stream, int status) {
-                            auto *operation = reinterpret_cast<_op<Receiver> *>(stream->data);
+        if ((uv_is_writable((uv_stream_t *)stream_handle_) != 0) &&
+            stream_handle_->write_queue_size > 0) {
+            uv_shutdown(
+                &shutdown_req_, reinterpret_cast<uv_stream_t *>(stream_handle_),
+                [](uv_shutdown_s *stream, int status) {
+                    auto *operation = reinterpret_cast<_op<Receiver> *>(stream->data);
 
-                            if (status < 0) {
-                                unifex::set_error(
-                                    std::move(operation->rec_),
-                                    std::make_exception_ptr(std::system_error(std::error_code(
-                                        static_cast<int>(status), LibUVErrCategory))));
-                            }
+                    if (status < 0) {
+                        unifex::set_error(std::move(operation->rec_),
+                                          std::make_exception_ptr(std::system_error(std::error_code(
+                                              static_cast<int>(status), LibUVErrCategory))));
+                    }
 
-                            if (!uv_is_closing((uv_handle_t *)stream->handle)) {
-                                uv_close(reinterpret_cast<uv_handle_t *>(operation->stream_handle_),
-                                         [](uv_handle_t *handle) {
-                                             // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-                                             auto *operation =
-                                                 reinterpret_cast<_op<Receiver> *>(handle->data);
-                                             unifex::set_value(std::move(operation->rec_));
-                                         });
-                            } else {
-                                unifex::set_value(std::move(operation->rec_));
-                            }
-                        });
-        } else if (!uv_is_closing(reinterpret_cast<uv_handle_t *>(stream_handle_))) {
+                    if (uv_is_closing(reinterpret_cast<uv_handle_t *>(stream->handle)) == 0) {
+                        uv_close(reinterpret_cast<uv_handle_t *>(operation->stream_handle_),
+                                 [](uv_handle_t *handle) {
+                                     // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
+                                     auto *operation =
+                                         reinterpret_cast<_op<Receiver> *>(handle->data);
+                                     unifex::set_value(std::move(operation->rec_));
+                                 });
+                    } else {
+                        unifex::set_value(std::move(operation->rec_));
+                    }
+                });
+        } else if (uv_is_closing(reinterpret_cast<uv_handle_t *>(stream_handle_)) == 0) {
             uv_close(reinterpret_cast<uv_handle_t *>(stream_handle_), [](uv_handle_t *handle) {
                 // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
                 auto *operation = reinterpret_cast<_op<Receiver> *>(handle->data);

@@ -126,17 +126,17 @@ class context {
    private:
     void enqueue(task_base* task);
     void dequeueall();
-    static void read_cb(uv_stream_s* req, long status, const uv_buf_t*);
+    static void read_cb(uv_stream_s* req, long status, const uv_buf_t* /*unused*/);
 
     std::mutex mutex_;
     task_base* head_ = nullptr;
     task_base* tail_ = nullptr;
     bool stop_ = false;
 
-    uv_loop_t uv_loop_;
-    std::array<uv_file, 2> pipes_;
-    uv_pipe_t read_pipe_;
-    char read_char_;
+    uv_loop_t uv_loop_{};
+    std::array<uv_file, 2> pipes_{};
+    uv_pipe_t read_pipe_{};
+    char read_char_{};
     uv_buf_t read_buf_{.base = &read_char_, .len = sizeof(read_char_)};
     std::thread thread_;
     std::thread::id thread_id_{};
