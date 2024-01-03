@@ -1,4 +1,6 @@
+#include <arpa/inet.h>
 #include <fcntl.h>
+#include <netinet/in.h> /* To define `struct in_addr'.  */
 
 #include <cstddef>
 #include <exception>
@@ -8,6 +10,7 @@
 #include <system_error>
 #include <thread>
 #include <unifex/any_sender_of.hpp>
+#include <unifex/sender_concepts.hpp>
 #include <vector>
 
 #include "pat/io/io.h"
@@ -24,14 +27,12 @@
 #include "unifex/sync_wait.hpp"
 
 int main() {
-    auto io_context = pat::runtime::IOContext::Create();
+    pat::runtime::IOContext io_context;
 
     constexpr std::string_view msg = "This is a test\n";
     std::array<char, msg.size()> buf = {};
 
     std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
-
-    unifex::let_done(unifex::just(), []() { return unifex::just(); });
 
     try {
         auto waitable =
@@ -69,6 +70,8 @@ int main() {
 
         std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
 
+        std::cout << "Network test" << std::endl;
+
         struct addrinfo hints {};
 
         std::memset(&hints, 0, sizeof hints);  // make sure the struct is empty
@@ -76,17 +79,19 @@ int main() {
         hints.ai_socktype = SOCK_STREAM;       // TCP stream sockets
         hints.ai_flags = AI_PASSIVE;           // fill in my IP for me
 
-        unifex::sync_wait(unifex::let_value_with(
-            [&io_context]() { return pat::runtime::TCPSocket::Create(io_context); },
+        auto glb_snd = unifex::let_value_with(
+            []() { return pat::runtime::TCPSocket{}; },
             [&io_context, &hints](pat::runtime::TCPSocket& socket) {
-                return pat::runtime::promise(pat::runtime::_getaddrinfo::_sender{
-                                                 io_context.GetLoop(), "localhost", "9000", hints})
-                    .let([&socket](auto* res) {
-                        std::cout << "Resolved" << std::endl;
-                        return pat::runtime::promise(socket.Connect(res->ai_addr))
-                            .then([res]() {
-                                uv_freeaddrinfo(res);
-                                std::cout << "Connected" << std::endl;
+                return io_context.get_scheduler()
+                    .schedule()
+                    .let([&io_context, &hints, &socket]() {
+                        return pat::runtime::promise(
+                                   pat::runtime::_getaddrinfo::_sender{io_context.GetLoop(),
+                                                                       "localhost", "9000", hints})
+                            .let([&io_context, &socket](addrinfo* addr) {
+                                return socket.Connect(io_context, addr->ai_addr).then([addr]() {
+                                    uv_freeaddrinfo(addr);
+                                });
                             })
                             .let([&socket]() {
                                 constexpr std::string_view kMsg =
@@ -96,44 +101,37 @@ int main() {
                             .let([&socket](auto&&) {
                                 return unifex::let_value_with(
                                     []() { return std::vector<char>{}; },
-                                    [&socket](std::vector<char>& buf) {
-                                        buf.resize(65536);
-                                        return socket.Read(buf)
-                                            .then([&buf](std::size_t bytes_read) {
+                                    [&socket](std::vector<char>& read_buf) {
+                                        read_buf.resize(65536);
+                                        return socket.Read(read_buf)
+                                            .then([&read_buf](std::size_t bytes_read) {
                                                 std::cout
                                                     << "Read:\n"
-                                                    << std::string_view{std::span{buf}.subspan(
+                                                    << std::string_view{std::span{read_buf}.subspan(
                                                            0, bytes_read)}
                                                     << std::endl;
                                             })
-                                            .let([&buf, &socket]() { return socket.Read(buf); })
-                                            .then([&buf](std::size_t bytes_read) {
+                                            .let([&socket, &read_buf]() {
+                                                return socket.Read(read_buf);
+                                            })
+                                            .then([&read_buf](std::size_t bytes_read) {
                                                 std::cout
                                                     << "Read:\n"
-                                                    << std::string_view{std::span{buf}.subspan(
+                                                    << std::string_view{std::span{read_buf}.subspan(
                                                            0, bytes_read)}
                                                     << std::endl;
                                             });
                                     });
-                            })
-                            .let([&socket]() { return socket.Close(); })
-                            .let_done([&socket]() {
-                                return socket.Close().let([]() { return unifex::just_done(); });
-                            })
-                            .let_error([&socket](std::exception_ptr error) {
-                                return socket.Close().then([error]() {
-                                    try {
-                                        std::rethrow_exception(error);
-                                    } catch (const std::system_error& sys_err) {
-                                        if (sys_err.code() == pat::io::IoError::kEOF) {
-                                            return;
-                                        }
-                                        std::rethrow_exception(std::current_exception());
-                                    }
-                                });
                             });
+                    })
+                    .let([&socket]() { return socket.Close(); })
+                    .let_error([&socket](auto&& err) {
+                        return socket.Close().then([&err]() { std::rethrow_exception(err); });
                     });
-            }));
+            });
+
+        unifex::sync_wait(glb_snd);
+
     } catch (const std::error_code& ec) {
         std::cout << "Caught error_code: " << ec.message() << std::endl;
     } catch (const std::exception& e) {

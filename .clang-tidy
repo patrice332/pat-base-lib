@@ -23,7 +23,8 @@ Checks: >-
   -readability-magic-numbers,
   -performance-trivially-destructible,
   -performance-avoid-endl,
-  -cppcoreguidelines-init-variables
+  -misc-include-cleaner,
+  -unused-includes
 
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold

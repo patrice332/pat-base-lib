@@ -1,15 +1,38 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
+    name = "promise",
+    srcs = [
+        "promise.cc",
+    ],
+    hdrs = [
+        "promise.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@libunifex",
+    ],
+)
+
+cc_library(
     name = "io_context",
     srcs = [
         "io_context.cc",
+        "libuv_errors.cc",
+        "stream_close.cc",
     ],
     hdrs = [
         "io_context.h",
+        "libuv_errors.h",
+        "stream_close.h",
     ],
     implementation_deps = [
         "@libuv",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":promise",
+        "@libunifex",
     ],
 )
 
@@ -17,14 +40,12 @@ cc_library(
     name = "runtime",
     srcs = [
         "close.cc",
+        "context.cc",
         "file.cc",
         "getaddrinfo.cc",
-        "libuv_errors.cc",
         "open.cc",
-        "promise.cc",
         "read.cc",
         "stream.cc",
-        "stream_close.cc",
         "stream_read.cc",
         "stream_write.cc",
         "tcp_connect.cc",
@@ -33,15 +54,13 @@ cc_library(
     ],
     hdrs = [
         "close.h",
+        "context.h",
         "file.h",
         "file_fwd.h",
         "getaddrinfo.h",
-        "libuv_errors.h",
         "open.h",
-        "promise.h",
         "read.h",
         "stream.h",
-        "stream_close.h",
         "stream_read.h",
         "stream_write.h",
         "tcp_connect.h",
@@ -51,6 +70,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":io_context",
+        ":promise",
         "//pat/io",
         "@libunifex",
         "@libuv",

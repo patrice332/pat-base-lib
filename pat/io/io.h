@@ -5,8 +5,7 @@
 #include <span>
 #include <system_error>
 #include <type_traits>
-
-#include "unifex/sender_concepts.hpp"
+#include <unifex/sender_concepts.hpp>
 
 namespace pat::io {
 

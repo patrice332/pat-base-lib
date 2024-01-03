@@ -1,6 +1,7 @@
 #include "pat/bytes/buffer.h"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+
 #include "pat/io/io.h"
 
 namespace pat::bytes {
@@ -39,14 +40,16 @@ TEST_F(BufferTesting, StringWriteWithSpace) {
     std::string str;
     str.reserve(kMsg.size());
     Buffer buf{std::move(str)};
-    buf.Write(kMsg);
+    auto rval = buf.Write(kMsg);
+    EXPECT_TRUE(rval.has_value());
     EXPECT_EQ(Allocations(), 0UL);
 }
 
 TEST_F(BufferTesting, StringWriteWithoutSpace) {
     constexpr std::string_view kMsg = "This is a test string!!!";
     Buffer buf{};
-    buf.Write(kMsg);
+    auto rval = buf.Write(kMsg);
+    EXPECT_TRUE(rval.has_value());
     EXPECT_EQ(Allocations(), 1UL);
 }
 
@@ -57,10 +60,13 @@ TEST_F(BufferTesting, StringWriteWithSpaceSparse) {
     str.reserve(kMsg.size() + 4);
     std::array<char, kReadSize> read_buf{};
     Buffer buf{std::move(str)};
-    buf.Write(kMsg);
-    buf.Read(read_buf);
+    auto rval = buf.Write(kMsg);
+    EXPECT_TRUE(rval.has_value());
+    rval = buf.Read(read_buf);
+    EXPECT_TRUE(rval.has_value());
     EXPECT_EQ(std::string_view{read_buf}, "This is a test strin");
-    buf.Write(kMsg);
+    rval = buf.Write(kMsg);
+    EXPECT_TRUE(rval.has_value());
     EXPECT_EQ(Allocations(), 0UL);
 }
 
@@ -68,13 +74,16 @@ TEST_F(BufferTesting, StringViewWrite) {
     constexpr std::string_view kMsg = "This is a test string!!!";
     std::array<char, kMsg.size()> read_buf{};
     Buffer buf{kMsg};
-    buf.Read(read_buf);
+    auto rval = buf.Read(read_buf);
+    EXPECT_TRUE(rval.has_value());
     EXPECT_EQ(std::string_view{read_buf}, kMsg);
     EXPECT_EQ(Allocations(), 0UL);
     EXPECT_EQ(buf.Size(), 0);
     EXPECT_EQ(buf.Capacity(), kMsg.size());
-    buf.Write(kMsg);
-    buf.Read(read_buf);
+    rval = buf.Write(kMsg);
+    EXPECT_TRUE(rval.has_value());
+    rval = buf.Read(read_buf);
+    EXPECT_TRUE(rval.has_value());
     EXPECT_EQ(std::string_view{read_buf}, kMsg);
     EXPECT_EQ(Allocations(), 1UL);
     EXPECT_EQ(buf.Size(), 0);

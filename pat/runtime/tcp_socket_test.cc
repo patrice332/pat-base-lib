@@ -1,6 +1,7 @@
 #include "pat/runtime/tcp_socket.h"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+
 #include "pat/io/io.h"
 
 namespace pat::runtime {

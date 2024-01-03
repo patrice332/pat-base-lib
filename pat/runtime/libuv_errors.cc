@@ -5,8 +5,8 @@
 namespace pat::runtime {
 
 const char* LibUVErrCategoryType::name() const noexcept { return "libuv"; }
-std::string LibUVErrCategoryType::message(int ev) const {
-    return std::format("{}: {}", name(), uv_strerror(ev));
+std::string LibUVErrCategoryType::message(int error_value) const {
+    return std::format("{}: {}", name(), uv_strerror(error_value));
 }
 
 }  // namespace pat::runtime

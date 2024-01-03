@@ -1,13 +1,14 @@
 #pragma once
 
+#include <uv.h>
+
 #include <cstring>
 #include <span>
 #include <system_error>
+#include <unifex/blocking.hpp>
+#include <unifex/receiver_concepts.hpp>
 
 #include "pat/runtime/libuv_errors.h"
-#include "unifex/blocking.hpp"
-#include "unifex/receiver_concepts.hpp"
-#include "uv.h"
 
 namespace pat::runtime::_stream_write {
 

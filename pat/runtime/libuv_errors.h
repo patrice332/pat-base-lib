@@ -1,9 +1,9 @@
 #pragma once
 
+#include <uv.h>
+
 #include <string>
 #include <system_error>
-
-#include "uv.h"
 
 namespace std {
 template <>
@@ -14,7 +14,7 @@ namespace pat::runtime {
 
 struct LibUVErrCategoryType : std::error_category {
     const char* name() const noexcept override;
-    std::string message(int ev) const override;
+    std::string message(int error_value) const override;
 };
 
 const LibUVErrCategoryType LibUVErrCategory{};

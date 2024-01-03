@@ -4,9 +4,31 @@
 
 namespace pat::runtime {
 
-TCPSocket::TCPSocket(IOContext& context) : Stream(context) {}
-TCPSocket::TCPSocket(TCPSocket&& other) noexcept = default;
-TCPSocket& TCPSocket::operator=(TCPSocket&& other) noexcept = default;
+namespace {
+constexpr std::size_t UV_HANDLE_CLOSED = 0x00000002;
+}
+
+TCPSocket::TCPSocket() = default;
+
+TCPSocket::TCPSocket(TCPSocket&& other) noexcept {
+    std::memcpy(&handle_, &other.handle_, sizeof(handle_));
+    std::memset(&other.handle_, 0, sizeof(other.handle_));
+    other.handle_.flags = UV_HANDLE_CLOSED;
+}
+
+/*
+TCPSocket& TCPSocket::operator=(TCPSocket&& other) noexcept {
+    if (this != &other) {
+        if (!static_cast<bool>(uv_is_closing(reinterpret_cast<uv_handle_t*>(&StreamHandle())))) {
+            std::terminate();
+        }
+        handle_ = other.handle_;
+        std::memset(&other.handle_, 0, sizeof(other.handle_));
+        other.handle_.flags = UV_HANDLE_CLOSED;
+    }
+    return *this;
+}
+*/
 TCPSocket::~TCPSocket() {
     // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
     if (!static_cast<bool>(uv_is_closing(reinterpret_cast<uv_handle_t*>(&StreamHandle())))) {
@@ -14,14 +36,10 @@ TCPSocket::~TCPSocket() {
     }
 }
 
-TCPSocket TCPSocket::Create(IOContext& context) {
-    TCPSocket return_value{context};
-    uv_tcp_init(return_value.Loop(), &return_value.handle_);
-    return return_value;
-}
-
+// trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
 uv_stream_t& TCPSocket::StreamHandle() { return *reinterpret_cast<uv_stream_t*>(&handle_); }
 uv_stream_t const& TCPSocket::StreamHandle() const {
+    // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
     return *reinterpret_cast<uv_stream_t const*>(&handle_);
 }
 

@@ -22,8 +22,8 @@ lint:
         - name: lint
           run_when: [cli, monitor, ci]
   enabled:
-    - clang-tidy@16.0.3
-    - clang-format@16.0.3
+    - clang-format@17.0.6
+    - clang-tidy@17.0.6
     - buildifier@6.4.0
     - checkov@3.1.44
     - git-diff-check

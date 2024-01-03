@@ -1,12 +1,13 @@
 #pragma once
 
+#include <uv.h>
+
 #include <string>
 #include <system_error>
+#include <unifex/blocking.hpp>
+#include <unifex/receiver_concepts.hpp>
 
 #include "pat/runtime/libuv_errors.h"
-#include "unifex/blocking.hpp"
-#include "unifex/receiver_concepts.hpp"
-#include "uv.h"
 
 namespace pat::runtime::_getaddrinfo {
 
@@ -43,7 +44,8 @@ class _op {
 
                 std::move(operation->rec_).set_value(res);
             },
-            node_.c_str(), service_.c_str(), &hints_);
+            node_.empty() ? nullptr : node_.c_str(), service_.empty() ? nullptr : service_.c_str(),
+            &hints_);
     }
 
    private:

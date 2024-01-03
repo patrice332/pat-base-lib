@@ -4,9 +4,7 @@ namespace pat::runtime::_open {
 // trunk-ignore(clang-tidy/bugprone-easily-swappable-parameters)
 _sender::_sender(uv_loop_t *loop, std::string path, int flags, int mode)
     : loop_{loop}, path_{std::move(path)}, flags_{flags}, mode_{mode} {}
-// trunk-ignore(clang-tidy/bugprone-exception-escape)
 _sender::_sender(_sender &&other) noexcept = default;
-// trunk-ignore(clang-tidy/bugprone-exception-escape)
 _sender &_sender::operator=(_sender &&other) noexcept {
     if (this != &other) {
         loop_ = other.loop_;

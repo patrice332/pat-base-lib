@@ -13,7 +13,7 @@ Buffer::Buffer(std::string&& str) : buf_{std::move(str)} {}
 Buffer::Buffer(std::string_view str) : buf_view_{str}, in_view_{true} {}
 
 std::expected<std::size_t, std::error_code> Buffer::Read(std::span<char> buf) {
-    std::size_t read_bytes = std::min(Size(), buf.size());
+    const std::size_t read_bytes = std::min(Size(), buf.size());
     if (in_view_) {
         std::copy(&buf_view_[pos_], &buf_view_[pos_ + read_bytes], buf.data());
     } else {
