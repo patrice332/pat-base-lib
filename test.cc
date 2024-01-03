@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "pat/io/io.h"
+#include "pat/runtime/context.h"
 #include "pat/runtime/file.h"
 #include "pat/runtime/file_fwd.h"
 #include "pat/runtime/getaddrinfo.h"
@@ -26,9 +27,9 @@
 #include "unifex/repeat_effect_until.hpp"
 #include "unifex/sync_wait.hpp"
 
-int main() {
-    pat::runtime::IOContext io_context;
+using pat::runtime::GetIOContext;
 
+int main() {
     constexpr std::string_view msg = "This is a test\n";
     std::array<char, msg.size()> buf = {};
 
@@ -36,33 +37,33 @@ int main() {
 
     try {
         auto waitable =
-            pat::runtime::File::Open(io_context, "/tmp/test.out",
+            pat::runtime::File::Open(GetIOContext(), "/tmp/test.out",
                                      UV_FS_O_CREAT | UV_FS_O_APPEND | UV_FS_O_WRONLY,
                                      S_IRUSR | S_IWUSR)
-                .let([&io_context, &msg](const pat::runtime::File& file) {
+                .let([&msg](const pat::runtime::File& file) {
                     std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
-                    return file.Write(io_context, msg)
-                        .let([&io_context, &file](std::size_t wrote_bytes) {
-                            std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
-                            std::cout << "Wrote " << wrote_bytes << std::endl;
-                            std::cout << "FD is " << file.Descriptor() << std::endl;
-                            return file.Close(io_context);
-                        });
+                    return file.Write(GetIOContext(), msg).let([&file](std::size_t wrote_bytes) {
+                        std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
+                        std::cout << "Wrote " << wrote_bytes << std::endl;
+                        std::cout << "FD is " << file.Descriptor() << std::endl;
+                        return file.Close(GetIOContext());
+                    });
                 })
-                .let([&io_context]() {
+                .let([]() {
                     std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
-                    return pat::runtime::File::Open(io_context, "/tmp/test.out", UV_FS_O_RDONLY);
+                    return pat::runtime::File::Open(GetIOContext(), "/tmp/test.out",
+                                                    UV_FS_O_RDONLY);
                 })
-                .let([&io_context, &buf](const pat::runtime::File& file) {
+                .let([&buf](const pat::runtime::File& file) {
                     std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
-                    return file.Read(io_context, buf)
-                        .let([&io_context, &file, &buf](std::size_t read_bytes) {
+                    return file.Read(GetIOContext(), buf)
+                        .let([&file, &buf](std::size_t read_bytes) {
                             std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
                             std::cout << "Read " << read_bytes << std::endl;
                             std::cout << "FD is " << file.Descriptor() << std::endl;
                             std::cout << "Buf is " << std::string_view{buf.data(), read_bytes}
                                       << std::endl;
-                            return file.Close(io_context);
+                            return file.Close(GetIOContext());
                         });
                 });
         std::cout << "Size of waitable: " << sizeof(waitable) << std::endl;
@@ -81,15 +82,16 @@ int main() {
 
         auto glb_snd = unifex::let_value_with(
             []() { return pat::runtime::TCPSocket{}; },
-            [&io_context, &hints](pat::runtime::TCPSocket& socket) {
-                return io_context.get_scheduler()
+            [&hints](pat::runtime::TCPSocket& socket) {
+                return GetIOContext()
+                    .get_scheduler()
                     .schedule()
-                    .let([&io_context, &hints, &socket]() {
+                    .let([&hints, &socket]() {
                         return pat::runtime::promise(
-                                   pat::runtime::_getaddrinfo::_sender{io_context.GetLoop(),
+                                   pat::runtime::_getaddrinfo::_sender{GetIOContext().GetLoop(),
                                                                        "localhost", "9000", hints})
-                            .let([&io_context, &socket](addrinfo* addr) {
-                                return socket.Connect(io_context, addr->ai_addr).then([addr]() {
+                            .let([&socket](addrinfo* addr) {
+                                return socket.Connect(GetIOContext(), addr->ai_addr).then([addr]() {
                                     uv_freeaddrinfo(addr);
                                 });
                             })

@@ -4,7 +4,9 @@
 #include <unifex/let_done.hpp>
 #include <unifex/let_error.hpp>
 #include <unifex/let_value.hpp>
+#include <unifex/scheduler_concepts.hpp>
 #include <unifex/then.hpp>
+#include <unifex/via.hpp>
 #include <utility>
 
 namespace pat::runtime::_promise {
