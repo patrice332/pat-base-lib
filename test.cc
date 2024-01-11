@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "pat/io/io.h"
+#include "pat/net/ip.h"
 #include "pat/runtime/context.h"
 #include "pat/runtime/file.h"
 #include "pat/runtime/file_fwd.h"
@@ -73,66 +74,52 @@ int main() {
 
         std::cout << "Network test" << std::endl;
 
-        struct addrinfo hints {};
-
-        std::memset(&hints, 0, sizeof hints);  // make sure the struct is empty
-        hints.ai_family = AF_UNSPEC;           // don't care IPv4 or IPv6
-        hints.ai_socktype = SOCK_STREAM;       // TCP stream sockets
-        hints.ai_flags = AI_PASSIVE;           // fill in my IP for me
-
-        auto glb_snd = unifex::let_value_with(
-            []() { return pat::runtime::TCPSocket{}; },
-            [&hints](pat::runtime::TCPSocket& socket) {
-                return GetIOContext()
-                    .get_scheduler()
-                    .schedule()
-                    .let([&hints, &socket]() {
-                        return pat::runtime::promise(
-                                   pat::runtime::_getaddrinfo::_sender{GetIOContext().GetLoop(),
-                                                                       "localhost", "9000", hints})
-                            .let([&socket](addrinfo* addr) {
-                                return socket.Connect(GetIOContext(), addr->ai_addr).then([addr]() {
-                                    uv_freeaddrinfo(addr);
+        auto glb_snd = pat::net::LookupIp("localhost").let([](std::vector<pat::net::Ip> ips) {
+            return unifex::let_value_with(
+                []() { return pat::runtime::TCPSocket{}; },
+                [ip_addr = ips.at(0)](pat::runtime::TCPSocket& socket) {
+                    return socket.Connect(GetIOContext(), ip_addr, 9000)
+                        .let([&socket]() {
+                            std::cout << "Connected\n";
+                            constexpr std::string_view kMsg =
+                                "GET / HTTP/1.1\r\nHost: localhost:9000\r\nAccept: "
+                                "*/*\r\n\r\n";
+                            return socket.Write(kMsg);
+                        })
+                        .let([&socket](auto&&) {
+                            return unifex::let_value_with(
+                                []() { return std::vector<char>{}; },
+                                [&socket](std::vector<char>& read_buf) {
+                                    read_buf.resize(65536);
+                                    return socket.Read(read_buf)
+                                        .then([&read_buf](std::size_t bytes_read) {
+                                            std::cout
+                                                << "Read:\n"
+                                                << std::string_view{std::span{read_buf}.subspan(
+                                                       0, bytes_read)}
+                                                << std::endl;
+                                        })
+                                        .let([&socket, &read_buf]() {
+                                            return socket.Read(read_buf);
+                                        })
+                                        .then([&read_buf](std::size_t bytes_read) {
+                                            std::cout
+                                                << "Read:\n"
+                                                << std::string_view{std::span{read_buf}.subspan(
+                                                       0, bytes_read)}
+                                                << std::endl;
+                                        });
                                 });
-                            })
-                            .let([&socket]() {
-                                constexpr std::string_view kMsg =
-                                    "GET / HTTP/1.1\r\nHost: localhost:9000\r\nAccept: */*\r\n\r\n";
-                                return socket.Write(kMsg);
-                            })
-                            .let([&socket](auto&&) {
-                                return unifex::let_value_with(
-                                    []() { return std::vector<char>{}; },
-                                    [&socket](std::vector<char>& read_buf) {
-                                        read_buf.resize(65536);
-                                        return socket.Read(read_buf)
-                                            .then([&read_buf](std::size_t bytes_read) {
-                                                std::cout
-                                                    << "Read:\n"
-                                                    << std::string_view{std::span{read_buf}.subspan(
-                                                           0, bytes_read)}
-                                                    << std::endl;
-                                            })
-                                            .let([&socket, &read_buf]() {
-                                                return socket.Read(read_buf);
-                                            })
-                                            .then([&read_buf](std::size_t bytes_read) {
-                                                std::cout
-                                                    << "Read:\n"
-                                                    << std::string_view{std::span{read_buf}.subspan(
-                                                           0, bytes_read)}
-                                                    << std::endl;
-                                            });
-                                    });
-                            });
-                    })
-                    .let([&socket]() { return socket.Close(); })
-                    .let_error([&socket](auto&& err) {
-                        return socket.Close().then([&err]() { std::rethrow_exception(err); });
-                    });
-            });
+                        })
 
-        unifex::sync_wait(glb_snd);
+                        .let([&socket]() { return socket.Close(); })
+                        .let_error([&socket](auto&& err) {
+                            return socket.Close().then([&err]() { std::rethrow_exception(err); });
+                        });
+                });
+        });
+
+        unifex::sync_wait(std::move(glb_snd));
 
     } catch (const std::error_code& ec) {
         std::cout << "Caught error_code: " << ec.message() << std::endl;

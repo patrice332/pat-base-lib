@@ -12,6 +12,7 @@ filegroup(
 cmake(
     name = "libuv",
     cache_entries = {
+        "LIBUV_BUILD_SHARED": "OFF",
         "LIBUV_BUILD_TESTS": "OFF",
     },
     generate_args = ["-GNinja"],

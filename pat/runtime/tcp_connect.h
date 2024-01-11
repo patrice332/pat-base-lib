@@ -7,6 +7,7 @@
 #include <unifex/blocking.hpp>
 #include <unifex/receiver_concepts.hpp>
 
+#include "pat/net/ip.h"
 #include "pat/runtime/libuv_errors.h"
 
 namespace pat::runtime::_tcp_connect {
@@ -14,8 +15,8 @@ namespace pat::runtime::_tcp_connect {
 template <unifex::receiver_of<> Receiver>
 class _op {
    public:
-    _op(Receiver &&rec, uv_tcp_t *handle, const struct sockaddr *addr)
-        : rec_(std::move(rec)), handle_{handle}, addr_{addr} {}
+    _op(Receiver &&rec, uv_tcp_t *handle, net::Ip ip_addr, std::uint16_t port)
+        : rec_(std::move(rec)), handle_{handle}, ip_{ip_addr}, port_{port} {}
 
     _op(_op const &) = delete;
     _op &operator=(_op const &) = delete;
@@ -25,30 +26,49 @@ class _op {
 
     void start() noexcept {
         connect_op_.data = this;
-        uv_tcp_connect(&connect_op_, handle_, addr_, [](uv_connect_t *req, int status) {
-            // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
-            auto *operation = reinterpret_cast<_op<Receiver> *>(req->data);
-            if (status < 0) {
-                unifex::set_error(std::move(operation->rec_),
-                                  std::make_exception_ptr(std::system_error(std::error_code(
-                                      static_cast<int>(status), LibUVErrCategory))));
-                return;
-            }
-
-            std::move(operation->rec_).set_value();
-        });
+        if (std::equal(net::internal::v4InV6Prefix.begin(), net::internal::v4InV6Prefix.end(),
+                       ip_.begin())) {
+            // IPv4
+            sockaddr_in addr{};
+            addr.sin_family = AF_INET;
+            addr.sin_port = htons(port_);
+            __builtin_memcpy(&addr.sin_addr.s_addr, ip_.data() + 12, sizeof(addr.sin_addr.s_addr));
+            uv_tcp_connect(&connect_op_, handle_, reinterpret_cast<sockaddr *>(&addr),
+                           &tcp_connect_cb);
+            return;
+        }
+        // IPv6
+        sockaddr_in6 addr{};
+        addr.sin6_family = AF_INET6;
+        addr.sin6_port = htons(port_);
+        __builtin_memcpy(addr.sin6_addr.s6_addr, ip_.data(), sizeof(addr.sin6_addr.s6_addr));
+        uv_tcp_connect(&connect_op_, handle_, reinterpret_cast<sockaddr *>(&addr), &tcp_connect_cb);
     }
 
    private:
+    static void tcp_connect_cb(uv_connect_t *req, int status) {
+        // trunk-ignore(clang-tidy/cppcoreguidelines-pro-type-reinterpret-cast)
+        auto *operation = reinterpret_cast<_op<Receiver> *>(req->data);
+        if (status < 0) {
+            unifex::set_error(std::move(operation->rec_),
+                              std::make_exception_ptr(std::system_error(
+                                  std::error_code(static_cast<int>(status), LibUVErrCategory))));
+            return;
+        }
+
+        std::move(operation->rec_).set_value();
+    }
+
     Receiver rec_{};
     uv_tcp_t *handle_{nullptr};
-    struct sockaddr const *addr_{nullptr};
+    net::Ip ip_;
+    std::uint16_t port_;
     uv_connect_t connect_op_{};
 };
 
 class _sender {
    public:
-    _sender(uv_tcp_t *handle, const struct sockaddr *addr);
+    _sender(uv_tcp_t *handle, net::Ip ip_addr, std::uint16_t port);
     _sender(_sender const &) = delete;
     _sender &operator=(_sender const &) = delete;
     _sender(_sender &&other) noexcept;
@@ -57,7 +77,7 @@ class _sender {
     ~_sender();
 
     auto connect(unifex::receiver_of<> auto &&rec) && {
-        return _op{std::forward<decltype(rec)>(rec), handle_, addr_};
+        return _op{std::forward<decltype(rec)>(rec), handle_, ip_, port_};
     }
 
     template <template <typename...> class Variant, template <typename...> class Tuple>
@@ -70,7 +90,8 @@ class _sender {
 
    private:
     uv_tcp_t *handle_;
-    struct sockaddr const *addr_;
+    net::Ip ip_;
+    std::uint16_t port_;
 };
 
 }  // namespace pat::runtime::_tcp_connect

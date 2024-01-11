@@ -6,6 +6,7 @@ cc_binary(
         "test.cc",
     ],
     deps = [
+        "//pat/net:ip",
         "//pat/runtime",
     ],
 )

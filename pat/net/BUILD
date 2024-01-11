@@ -10,7 +10,10 @@ cc_library(
     hdrs = [
         "ip.h",
     ],
+    visibility = ["//visibility:public"],
     deps = [
+        "//pat/runtime:context",
+        "//pat/runtime:getaddrinfo",
         "@libunifex",
     ],
 )

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unifex/sender_concepts.hpp>
 
+#include "pat/net/ip.h"
 #include "pat/runtime/promise.h"
 #include "pat/runtime/stream.h"
 #include "pat/runtime/tcp_connect.h"
@@ -21,13 +22,18 @@ class TCPSocket final : public Stream {
     TCPSocket& operator=(TCPSocket&& other) noexcept = delete;
     ~TCPSocket() final;
 
-    unifex::sender auto Connect(IOContext& context, const struct sockaddr* addr) {
+    unifex::sender auto Connect(IOContext& context, net::Ip ip_addr, std::uint16_t port) {
         handle_.data = this;
         return context.get_scheduler().schedule().let(
-            [&context, handle = &handle_, addr]() mutable {
-                uv_tcp_init_ex(context.GetLoop(), handle, addr->sa_family);
+            [&context, handle = &handle_, ip_addr, port]() mutable {
+                if (std::equal(net::internal::v4InV6Prefix.begin(),
+                               net::internal::v4InV6Prefix.end(), ip_addr.begin())) {
+                    uv_tcp_init_ex(context.GetLoop(), handle, AF_INET);
+                } else {
+                    uv_tcp_init_ex(context.GetLoop(), handle, AF_INET6);
+                }
                 reinterpret_cast<TCPSocket*>(handle->data)->init_ = true;
-                return promise(_tcp_connect::_sender(handle, addr));
+                return promise(_tcp_connect::_sender(handle, ip_addr, port));
             });
     }
 
