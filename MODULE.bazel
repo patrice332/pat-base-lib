@@ -44,12 +44,12 @@ llvm.toolchain(
     strip_prefix = {
         "linux-x86_64": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04",
     },
-    sysroot = {
-        "linux-x86_64": "chromium_x64_sysroot",
-    },
-    sysroot_label_map = {
-        "@org_chromium_sysroot_linux_x64//:sysroot": "chromium_x64_sysroot",
-    },
+#    sysroot = {
+#        "linux-x86_64": "chromium_x64_sysroot",
+#    },
+#    sysroot_label_map = {
+#        "@org_chromium_sysroot_linux_x64//:sysroot": "chromium_x64_sysroot",
+#    },
     urls = {
         "linux-x86_64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz"],
     },

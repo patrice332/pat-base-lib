@@ -17,3 +17,33 @@ cc_library(
         "@libunifex",
     ],
 )
+
+cc_library(
+    name = "ipaddr",
+    srcs = [
+        "ipaddr.cc",
+    ],
+    hdrs = [
+        "ipaddr.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ip",
+    ],
+)
+
+cc_library(
+    name = "tcp_conn",
+    srcs = [
+        "tcp_conn.cc",
+    ],
+    hdrs = [
+        "tcp_conn.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ipaddr",
+        "//pat/runtime:tcp_socket",
+        "@libunifex",
+    ],
+)

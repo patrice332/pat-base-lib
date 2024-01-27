@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "81977dac365f992d17f5975b2fef363773b0b5483cc5ae2a46207dd6bc69feb8",
+  "moduleFileHash": "f18d95c389780b31bd39501e84949b60cfe679aa54d796f6fe1a2174554f0996",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -189,12 +189,6 @@
                 },
                 "strip_prefix": {
                   "linux-x86_64": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04"
-                },
-                "sysroot": {
-                  "linux-x86_64": "chromium_x64_sysroot"
-                },
-                "sysroot_label_map": {
-                  "@org_chromium_sysroot_linux_x64//:sysroot": "chromium_x64_sysroot"
                 },
                 "urls": {
                   "linux-x86_64": [
@@ -2424,12 +2418,8 @@
               "opt_compile_flags": {},
               "opt_link_flags": {},
               "stdlib": {},
-              "sysroot": {
-                "linux-x86_64": "chromium_x64_sysroot"
-              },
-              "sysroot_label_map": {
-                "@@_main~_repo_rules~org_chromium_sysroot_linux_x64//:sysroot": "chromium_x64_sysroot"
-              },
+              "sysroot": {},
+              "sysroot_label_map": {},
               "target_settings": {},
               "toolchain_roots": {},
               "toolchain_roots_label_map": {},

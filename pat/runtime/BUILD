@@ -136,6 +136,7 @@ cc_library(
     hdrs = [
         "tcp_socket.h",
     ],
+    visibility = ["//pat/net:__subpackages__"],
     deps = [
         ":promise",
         ":stream",
